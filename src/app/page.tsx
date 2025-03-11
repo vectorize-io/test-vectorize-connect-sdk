@@ -7,7 +7,7 @@ export default function Home() {
   // NON WHITE LABEL states
   const [nonWhiteLabelconnectorId, setnonWhiteLabelconnectorId] = useState<string | null>(null);
 
-  // WHITE LABEL states
+  // WHITE LABEL states 
   const [whiteLabelConnectorId, setWhiteLabelConnectorId] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
