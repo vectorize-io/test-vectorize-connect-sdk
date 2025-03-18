@@ -188,6 +188,8 @@ export default function Home() {
   const handleUseNonWhiteLabelConnectorId = () => {
     if (nonWhiteLabelInputConnectorId.trim()) {
       setnonWhiteLabelconnectorId(nonWhiteLabelInputConnectorId.trim());
+      // Clear the input after setting the connector ID
+      setNonWhiteLabelInputConnectorId("");
     }
   };
 
@@ -200,6 +202,8 @@ export default function Home() {
   const handleUseWhiteLabelConnectorId = () => {
     if (whiteLabelInputConnectorId.trim()) {
       setWhiteLabelConnectorId(whiteLabelInputConnectorId.trim());
+      // Clear the input after setting the connector ID
+      setWhiteLabelInputConnectorId("");
     }
   };
 
