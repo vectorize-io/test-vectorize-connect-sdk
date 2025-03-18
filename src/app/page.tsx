@@ -181,7 +181,8 @@ export default function Home() {
 
   // Handle input for non-white-label connector ID
   const handleNonWhiteLabelConnectorIdInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNonWhiteLabelInputConnectorId(e.target.value);
+    const value = e.target.value;
+    setNonWhiteLabelInputConnectorId(value);
   };
 
   // Handle using the input connector ID for non-white-label
@@ -195,7 +196,8 @@ export default function Home() {
 
   // Handle input for white-label connector ID
   const handleWhiteLabelConnectorIdInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWhiteLabelInputConnectorId(e.target.value);
+    const value = e.target.value;
+    setWhiteLabelInputConnectorId(value);
   };
 
   // Handle using the input connector ID for white-label
@@ -225,9 +227,9 @@ export default function Home() {
           />
           <button
             onClick={handleUseWhiteLabelConnectorId}
-            disabled={!whiteLabelInputConnectorId.trim()}
+            disabled={whiteLabelInputConnectorId.trim() === ""}
             className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              !whiteLabelInputConnectorId.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+              whiteLabelInputConnectorId.trim() === "" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
@@ -298,9 +300,9 @@ export default function Home() {
           />
           <button
             onClick={handleUseNonWhiteLabelConnectorId}
-            disabled={!nonWhiteLabelInputConnectorId.trim()}
+            disabled={nonWhiteLabelInputConnectorId.trim() === ""}
             className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              !nonWhiteLabelInputConnectorId.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+              nonWhiteLabelInputConnectorId.trim() === "" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
