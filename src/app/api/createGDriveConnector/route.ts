@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     // 2. Gather environment variables for your Vectorize config
     const config: VectorizeAPIConfig = {
       organizationId: process.env.VECTORIZE_ORG ?? "",
-      authorization: process.env.VECTORIZE_API_KEY ?? "",
+      authorization: process.env.VECTORIZE_TOKEN ?? "",
     };
 
     // Optionally, validate environment variables before proceeding

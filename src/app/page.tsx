@@ -6,9 +6,11 @@ import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from 'vectori
 export default function Home() {
   // NON WHITE LABEL states
   const [nonWhiteLabelconnectorId, setnonWhiteLabelconnectorId] = useState<string | null>(null);
+  const [nonWhiteLabelInputConnectorId, setNonWhiteLabelInputConnectorId] = useState<string>("");
 
   // WHITE LABEL states 
   const [whiteLabelConnectorId, setWhiteLabelConnectorId] = useState<string | null>(null);
+  const [whiteLabelInputConnectorId, setWhiteLabelInputConnectorId] = useState<string>("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -177,11 +179,56 @@ export default function Home() {
     setWhiteLabelConnectorId(null);
   };
 
+  // Handle input for non-white-label connector ID
+  const handleNonWhiteLabelConnectorIdInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNonWhiteLabelInputConnectorId(e.target.value);
+  };
+
+  // Handle using the input connector ID for non-white-label
+  const handleUseNonWhiteLabelConnectorId = () => {
+    if (nonWhiteLabelInputConnectorId.trim()) {
+      setnonWhiteLabelconnectorId(nonWhiteLabelInputConnectorId.trim());
+    }
+  };
+
+  // Handle input for white-label connector ID
+  const handleWhiteLabelConnectorIdInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setWhiteLabelInputConnectorId(e.target.value);
+  };
+
+  // Handle using the input connector ID for white-label
+  const handleUseWhiteLabelConnectorId = () => {
+    if (whiteLabelInputConnectorId.trim()) {
+      setWhiteLabelConnectorId(whiteLabelInputConnectorId.trim());
+    }
+  };
+
   return (
     <div className="p-6 space-y-8">
       {/* WHITE LABEL SECTION */}
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">WHITE LABEL</h2>
+
+        {/* Add input field for connector ID */}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={whiteLabelInputConnectorId}
+            onChange={handleWhiteLabelConnectorIdInput}
+            placeholder="Enter existing connector ID"
+            className="px-3 py-2 border border-gray-300 rounded-lg flex-grow"
+            disabled={!!whiteLabelConnectorId}
+          />
+          <button
+            onClick={handleUseWhiteLabelConnectorId}
+            disabled={!whiteLabelInputConnectorId.trim() || !!whiteLabelConnectorId}
+            className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
+              !whiteLabelInputConnectorId.trim() || !!whiteLabelConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            }`}
+          >
+            Use Connector ID
+          </button>
+        </div>
 
         <button
           onClick={handleCreateGDriveMultiCustomConnector}
@@ -234,6 +281,27 @@ export default function Home() {
             {error}
           </div>
         )}
+
+        {/* Add input field for connector ID */}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={nonWhiteLabelInputConnectorId}
+            onChange={handleNonWhiteLabelConnectorIdInput}
+            placeholder="Enter existing connector ID"
+            className="px-3 py-2 border border-gray-300 rounded-lg flex-grow"
+            disabled={!!nonWhiteLabelconnectorId}
+          />
+          <button
+            onClick={handleUseNonWhiteLabelConnectorId}
+            disabled={!nonWhiteLabelInputConnectorId.trim() || !!nonWhiteLabelconnectorId}
+            className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
+              !nonWhiteLabelInputConnectorId.trim() || !!nonWhiteLabelconnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            }`}
+          >
+            Use Connector ID
+          </button>
+        </div>
 
         <button
           onClick={handleCreateGDriveMultiConnector}
