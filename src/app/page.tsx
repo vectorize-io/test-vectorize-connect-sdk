@@ -217,7 +217,7 @@ export default function Home() {
             onChange={handleWhiteLabelConnectorIdInput}
             placeholder="Enter existing connector ID"
             className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
-            disabled={!!whiteLabelConnectorId}
+            disabled={false}
           />
           <button
             onClick={handleUseWhiteLabelConnectorId}
@@ -290,7 +290,7 @@ export default function Home() {
             onChange={handleNonWhiteLabelConnectorIdInput}
             placeholder="Enter existing connector ID"
             className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
-            disabled={!!nonWhiteLabelconnectorId}
+            disabled={false}
           />
           <button
             onClick={handleUseNonWhiteLabelConnectorId}
