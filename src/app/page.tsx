@@ -221,9 +221,9 @@ export default function Home() {
           />
           <button
             onClick={handleUseWhiteLabelConnectorId}
-            disabled={!whiteLabelInputConnectorId.trim() || !!whiteLabelConnectorId}
-            className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              !whiteLabelInputConnectorId.trim() || !!whiteLabelConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            disabled={!whiteLabelInputConnectorId.trim()}
+            className={`bg-blue-600 text-black px-4 py-2 rounded-lg transition-colors ${
+              !whiteLabelInputConnectorId.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
@@ -294,9 +294,9 @@ export default function Home() {
           />
           <button
             onClick={handleUseNonWhiteLabelConnectorId}
-            disabled={!nonWhiteLabelInputConnectorId.trim() || !!nonWhiteLabelconnectorId}
-            className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              !nonWhiteLabelInputConnectorId.trim() || !!nonWhiteLabelconnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            disabled={!nonWhiteLabelInputConnectorId.trim()}
+            className={`bg-blue-600 text-black px-4 py-2 rounded-lg transition-colors ${
+              !nonWhiteLabelInputConnectorId.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
