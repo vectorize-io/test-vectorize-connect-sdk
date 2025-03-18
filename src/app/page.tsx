@@ -216,13 +216,13 @@ export default function Home() {
             value={whiteLabelInputConnectorId}
             onChange={handleWhiteLabelConnectorIdInput}
             placeholder="Enter existing connector ID"
-            className="px-3 py-2 border border-gray-300 rounded-lg flex-grow"
+            className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
             disabled={!!whiteLabelConnectorId}
           />
           <button
             onClick={handleUseWhiteLabelConnectorId}
             disabled={!whiteLabelInputConnectorId.trim()}
-            className={`bg-blue-600 text-black px-4 py-2 rounded-lg transition-colors ${
+            className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
               !whiteLabelInputConnectorId.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
@@ -289,13 +289,13 @@ export default function Home() {
             value={nonWhiteLabelInputConnectorId}
             onChange={handleNonWhiteLabelConnectorIdInput}
             placeholder="Enter existing connector ID"
-            className="px-3 py-2 border border-gray-300 rounded-lg flex-grow"
+            className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
             disabled={!!nonWhiteLabelconnectorId}
           />
           <button
             onClick={handleUseNonWhiteLabelConnectorId}
             disabled={!nonWhiteLabelInputConnectorId.trim()}
-            className={`bg-blue-600 text-black px-4 py-2 rounded-lg transition-colors ${
+            className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
               !nonWhiteLabelInputConnectorId.trim() ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
