@@ -1,7 +1,7 @@
 // /api/createGDriveConnector/route.ts
 
 import { NextResponse } from "next/server";
-import { createGDriveSourceConnector } from "vectorize-connect";
+import { createGDriveSourceConnector } from "@vectorize-io/vectorize-connect";
 
 // Provide the structure for your config object
 interface VectorizeAPIConfig {
@@ -17,19 +17,19 @@ export async function POST(request: Request) {
     // 2. Gather environment variables for your Vectorize config
     const config: VectorizeAPIConfig = {
       organizationId: process.env.VECTORIZE_ORG ?? "",
-      authorization: process.env.VECTORIZE_TOKEN ?? "",
+      authorization: process.env.VECTORIZE_API_KEY ?? "",
     };
 
     // Optionally, validate environment variables before proceeding
     if (!config.organizationId) {
       return NextResponse.json(
-        { error: "Missing VECTORIZE_ORG_ID in environment" },
+        { error: "Missing VECTORIZE_ORG in environment" },
         { status: 500 }
       );
     }
     if (!config.authorization) {
       return NextResponse.json(
-        { error: "Missing VECTORIZE_AUTH_TOKEN in environment" },
+        { error: "Missing VECTORIZE_API_KEY in environment" },
         { status: 500 }
       );
     }

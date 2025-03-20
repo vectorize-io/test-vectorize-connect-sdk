@@ -1,5 +1,5 @@
 // /api/google-callback/route.ts
-import { createGDrivePickerCallbackResponse } from 'vectorize-connect';
+import { createGDrivePickerCallbackResponse } from '@vectorize-io/vectorize-connect';
 import { type NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const config = {
     clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
-    apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY!,
+    apiKey: process.env.GOOGLE_API_KEY!,
     redirectUri: 'http://localhost:3001/api/google-callback'
   };
 

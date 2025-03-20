@@ -1,13 +1,8 @@
 // app/api/google-drive-callback/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import {manageGDriveUser} from 'vectorize-connect';
+import {manageGDriveUser, VectorizeAPIConfig} from '@vectorize-io/vectorize-connect';
 
-
-interface VectorizeAPIConfig {
-    organizationId: string;
-    authorization: string;
-  }
 
 const ALLOWED_ORIGINS = ['http://localhost:3000']; 
 // Adjust this array for all the origins you want to allow
@@ -28,7 +23,7 @@ function buildCorsResponse(body: any, status = 200, origin = 'http://localhost:3
 
 /**
  * Preflight handler for OPTIONS requests.
- * Browser sends this before POST if it’s a cross-origin request.
+ * Browser sends this before POST if it's a cross-origin request.
  */
 export async function OPTIONS(request: NextRequest) {
   // Check if the Origin of this request is allowed
@@ -58,19 +53,19 @@ export async function POST(request: NextRequest) {
 
     const config: VectorizeAPIConfig = {
         organizationId: process.env.VECTORIZE_ORG ?? "",
-        authorization: process.env.VECTORIZE_TOKEN ?? "",
+        authorization: process.env.VECTORIZE_API_KEY ?? "",
     };
 
     // Optionally, validate environment variables before proceeding
     if (!config.organizationId) {
         return NextResponse.json(
-        { error: "Missing VECTORIZE_ORG_ID in environment" },
+        { error: "Missing VECTORIZE_ORG in environment" },
         { status: 500 }
         );
     }
     if (!config.authorization) {
         return NextResponse.json(
-        { error: "Missing VECTORIZE_AUTH_TOKEN in environment" },
+        { error: "Missing VECTORIZE_API_KEY in environment" },
         { status: 500 }
         );
     }
@@ -88,34 +83,34 @@ export async function POST(request: NextRequest) {
          selectionData = body.selection;
     }
 
-    // Call the manageGDriveUser function from vectorize-connect
+    // Generate a random user ID for testing
+    const userId = "newTestUser" + Math.floor(Math.random() * 1000);
+
+    // Call the manageGDriveUser function from @vectorize-io/vectorize-connect
     const response = await manageGDriveUser(
         config,
         connectorId,
-        selectionData.fileIds,
+        selectionData.selectedFiles,
         selectionData.refreshToken,
-        "newTestUser",
-        "add",
+        userId,
+        "add", // "edit" , "remove" are other options
         "http://localhost:3000/api"
     );
 
-    console.log("reponse", response);
+    console.log("response", response);
 
     const data = await response.json();
 
-    console.log("data", data);
-
     if (!response.ok) {
         console.error("Error managing Google Drive user:", data.error);
-        return;
+        return buildCorsResponse({ error: 'Failed to process callback' }, 500);
     }
 
-    // Return success response with CORS headers
+    // Return success response with CORS headers and include the userId
     // Determine the origin
     const originHeader = request.headers.get('origin') || '';
     const origin = ALLOWED_ORIGINS.includes(originHeader) ? originHeader : 'null';
-    return buildCorsResponse({ success: true }, 200, origin);
-
+    return buildCorsResponse({ success: true, userId: userId }, 200, origin);
   } catch (error) {
     console.error('Error in Google Drive callback route:', error);
 
