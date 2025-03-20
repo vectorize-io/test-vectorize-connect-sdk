@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Retrieves Google OAuth configuration from environment variables
+ * @param request - The incoming Next.js request
+ * @returns JSON response with Google OAuth configuration
+ */
 export async function GET(request: NextRequest) {
 
     const config = {

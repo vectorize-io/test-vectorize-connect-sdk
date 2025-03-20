@@ -4,14 +4,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vectorize-io/vectorize-connect';
 
+// Base URL for API endpoints
+const BASE_URL = 'http://localhost:3000';
+const API_PATH = '/api';
+const CALLBACK_PATH = '/api/google-callback';
+
 export default function Home() {
   const router = useRouter();
   
-  // NON WHITE LABEL states
-  const [nonWhiteLabelconnectorId, setnonWhiteLabelconnectorId] = useState<string | null>(null);
+  // Non-White Label states
+  const [nonWhiteLabelConnectorId, setNonWhiteLabelConnectorId] = useState<string | null>(null);
   const [nonWhiteLabelInputConnectorId, setNonWhiteLabelInputConnectorId] = useState<string>("");
 
-  // WHITE LABEL states 
+  // White Label states 
   const [whiteLabelConnectorId, setWhiteLabelConnectorId] = useState<string | null>(null);
   const [whiteLabelInputConnectorId, setWhiteLabelInputConnectorId] = useState<string>("");
 
@@ -28,9 +33,9 @@ export default function Home() {
   };
 
   const handleCreateNonWhiteLabelConnector = async () => {
-    // NON WHITE LABEL: Set the parameters for the request
+    // Non-White Label: Set the parameters for the request
     const whiteLabel = false;
-    const connectorName = "My Non White Label Google Drive Connector";
+    const connectorName = "My Non-White Label Google Drive Connector";
   
     try {
       const response = await fetch("/api/createGDriveConnector", {
@@ -41,7 +46,7 @@ export default function Home() {
         body: JSON.stringify({
           whiteLabel,
           connectorName,
-          platformUrl: "http://localhost:3000/api",
+          platformUrl: `${BASE_URL}${API_PATH}`,
           clientId: null,
           clientSecret: null,
         }),
@@ -59,13 +64,13 @@ export default function Home() {
   
       console.log("Connector created successfully:", data);
       // Set the non-white-label connector state
-      setnonWhiteLabelconnectorId(data);
+      setNonWhiteLabelConnectorId(data);
     } catch (error) {
       console.error("Unexpected error:", error);
     }
   };
 
-  // Placeholder function for creating a white label connector
+  // Placeholder function for creating a White Label connector
   const handleCreateWhiteLabelConnector = async () => {
     const whiteLabel = true;
     const connectorName = "My White Label Google Drive Connector";
@@ -89,7 +94,7 @@ export default function Home() {
           body: JSON.stringify({
             whiteLabel,
             connectorName,
-            platformUrl: "http://localhost:3000/api",
+            platformUrl: `${BASE_URL}${API_PATH}`,
             clientId: clientId,
             clientSecret: clientSecret,
           }),
@@ -109,11 +114,11 @@ export default function Home() {
         // Set the non-white-label connector state
         setWhiteLabelConnectorId(data);
     } catch (error) {
-      console.error("Error creating white label multi custom connector:", error);
+      console.error("Error creating White Label multi custom connector:", error);
     }
   };
 
-  // Handle the redirect to Google Drive connect for non white label
+  // Handle the redirect to Google Drive connect for Non-White Label
   const handleNonWhiteLabelConnectGoogleDrive = async () => {
     setIsLoading(true);
     setError(null);
@@ -134,8 +139,8 @@ export default function Home() {
       await redirectToVectorizeGoogleDriveConnect(
         config,
         "newNonWhiteLabelUser" + Math.floor(Math.random() * 1000), // Random username for demo purposes
-        nonWhiteLabelconnectorId!,
-        'http://localhost:3000' // Or your environment-specific platform URL
+        nonWhiteLabelConnectorId!,
+        BASE_URL // Or your environment-specific platform URL
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
@@ -146,7 +151,7 @@ export default function Home() {
     }
   };
 
-  // Handle the redirect to Google Drive connect for white label
+  // Handle the redirect to Google Drive connect for White Label
   const handleWhiteLabelConnectGoogleDrive = async () => {
     setIsLoading(true);
     setError(null);
@@ -169,7 +174,7 @@ export default function Home() {
       clientId: clientId,
       clientSecret: clientSecret,
       apiKey: apiKey,
-      redirectUri: `${window.location.origin}/api/google-callback`
+      redirectUri: `${BASE_URL}${CALLBACK_PATH}`
     };
 
     const popup = startGDriveOAuth({
@@ -226,10 +231,10 @@ export default function Home() {
   };
 
   const handleClearConnectorId = () => {
-    setnonWhiteLabelconnectorId(null);
+    setNonWhiteLabelConnectorId(null);
   };
 
-  // Clear white label connector state
+  // Clear White Label connector state
   const handleClearWhiteLabelConnectorId = () => {
     setWhiteLabelConnectorId(null);
   };
@@ -243,7 +248,7 @@ export default function Home() {
   // Handle using the input connector ID for non-white-label
   const handleUseNonWhiteLabelConnectorId = () => {
     if (nonWhiteLabelInputConnectorId.trim()) {
-      setnonWhiteLabelconnectorId(nonWhiteLabelInputConnectorId.trim());
+      setNonWhiteLabelConnectorId(nonWhiteLabelInputConnectorId.trim());
       // Clear the input after setting the connector ID
       setNonWhiteLabelInputConnectorId("");
     }
@@ -330,9 +335,9 @@ export default function Home() {
         </div>
       )}
 
-      {/* WHITE LABEL SECTION */}
+      {/* White Label Section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">WHITE LABEL</h2>
+        <h2 className="text-lg font-semibold">White Label</h2>
 
         {/* Add input field for connector ID */}
         <div className="flex items-center gap-2">
@@ -362,7 +367,7 @@ export default function Home() {
             whiteLabelConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
-          Create a new white label Google Drive connector
+          Create a new White Label Google Drive connector
         </button>
         
         <button
@@ -372,7 +377,7 @@ export default function Home() {
             !whiteLabelConnectorId || isLoading ? "bg-gray-400 text-white opacity-50 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
           }`}
         >
-          {isLoading ? "Connecting..." : "Connect with Google Drive using White label"}
+          {isLoading ? "Connecting..." : "Connect with Google Drive using White Label"}
         </button>
 
         <div className="flex items-center gap-3 w-fit bg-gray-50 rounded-lg p-4">
@@ -424,9 +429,9 @@ export default function Home() {
 
         <button
           onClick={handleCreateNonWhiteLabelConnector}
-          disabled={!!nonWhiteLabelconnectorId}
+          disabled={!!nonWhiteLabelConnectorId}
           className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-            nonWhiteLabelconnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            nonWhiteLabelConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
           Create a new non white label Google Drive connector
@@ -435,10 +440,10 @@ export default function Home() {
         <div className="space-y-4">
           <button 
             onClick={handleNonWhiteLabelConnectGoogleDrive}
-            disabled={!nonWhiteLabelconnectorId || isLoading}
+            disabled={!nonWhiteLabelConnectorId || isLoading}
             className={`
               bg-green-600 text-white px-4 py-2 rounded-lg
-              ${(!nonWhiteLabelconnectorId || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
+              ${(!nonWhiteLabelConnectorId || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
               flex items-center gap-2
             `}
           >
@@ -472,14 +477,14 @@ export default function Home() {
           <div>
             <h3 className="text-sm font-medium text-gray-700">Non white label Connector:</h3>
             <p className="mt-1 text-sm font-mono">
-              {nonWhiteLabelconnectorId ? (
-                <span className="text-black">{nonWhiteLabelconnectorId}</span>
+              {nonWhiteLabelConnectorId ? (
+                <span className="text-black">{nonWhiteLabelConnectorId}</span>
               ) : (
                 <span className="text-gray-400 italic">undefined</span>
               )}
             </p>
           </div>
-          {nonWhiteLabelconnectorId && (
+          {nonWhiteLabelConnectorId && (
             <button
               onClick={handleClearConnectorId}
               className="ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"

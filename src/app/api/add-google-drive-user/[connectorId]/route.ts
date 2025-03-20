@@ -3,14 +3,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {manageGDriveUser, VectorizeAPIConfig} from '@vectorize-io/vectorize-connect';
 
+// Base URL for API endpoints
+const BASE_URL = 'http://localhost:3000';
+const API_PATH = '/api';
 
-const ALLOWED_ORIGINS = ['http://localhost:3000']; 
+const ALLOWED_ORIGINS = [BASE_URL]; 
 // Adjust this array for all the origins you want to allow
 
 /**
  * Helper function to build a response with CORS headers.
  */
-function buildCorsResponse(body: any, status = 200, origin = 'http://localhost:3000') {
+function buildCorsResponse(body: any, status = 200, origin = BASE_URL) {
   const headers = new Headers({
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     const config: VectorizeAPIConfig = {
         organizationId: process.env.VECTORIZE_ORG ?? "",
-        authorization: process.env.VECTORIZE_API_KEY ?? "",
+        authorization: process.env.VECTORIZE_TOKEN ?? "",
     };
 
     // Optionally, validate environment variables before proceeding
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
     if (!config.authorization) {
         return NextResponse.json(
-        { error: "Missing VECTORIZE_API_KEY in environment" },
+        { error: "Missing VECTORIZE_TOKEN in environment" },
         { status: 500 }
         );
     }
@@ -94,7 +97,7 @@ export async function POST(request: NextRequest) {
         selectionData.refreshToken,
         userId,
         "add", // "edit" , "remove" are other options
-        "http://localhost:3000/api"
+        `${BASE_URL}${API_PATH}`
     );
 
     console.log("response", response);

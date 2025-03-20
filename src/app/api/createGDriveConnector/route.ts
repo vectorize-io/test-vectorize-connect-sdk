@@ -1,14 +1,13 @@
 // /api/createGDriveConnector/route.ts
 
 import { NextResponse } from "next/server";
-import { createGDriveSourceConnector } from "@vectorize-io/vectorize-connect";
+import { createGDriveSourceConnector, VectorizeAPIConfig } from "@vectorize-io/vectorize-connect";
 
-// Provide the structure for your config object
-interface VectorizeAPIConfig {
-  organizationId: string;
-  authorization: string;
-}
-
+/**
+ * Creates a new Google Drive connector with the provided configuration
+ * @param request - The incoming HTTP request containing connector configuration
+ * @returns JSON response with the created connector ID or error message
+ */
 export async function POST(request: Request) {
   try {
     // 1. Parse the incoming request
@@ -17,7 +16,7 @@ export async function POST(request: Request) {
     // 2. Gather environment variables for your Vectorize config
     const config: VectorizeAPIConfig = {
       organizationId: process.env.VECTORIZE_ORG ?? "",
-      authorization: process.env.VECTORIZE_API_KEY ?? "",
+      authorization: process.env.VECTORIZE_TOKEN ?? "",
     };
 
     // Optionally, validate environment variables before proceeding
@@ -29,7 +28,7 @@ export async function POST(request: Request) {
     }
     if (!config.authorization) {
       return NextResponse.json(
-        { error: "Missing VECTORIZE_API_KEY in environment" },
+        { error: "Missing VECTORIZE_TOKEN in environment" },
         { status: 500 }
       );
     }
