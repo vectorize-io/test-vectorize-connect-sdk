@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vectorize-io/vectorize-connect';
 
-// Base URL for API endpoints
+// Base URL for API endpoints for development
 const BASE_URL = 'http://localhost:3000';
 const API_PATH = '/api';
 const CALLBACK_PATH = '/api/google-callback';
@@ -46,7 +46,8 @@ export default function Home() {
         body: JSON.stringify({
           whiteLabel,
           connectorName,
-          platformUrl: `${BASE_URL}${API_PATH}`,
+          // platformUrl: `${BASE_URL}${API_PATH}`,
+          platformUrl: undefined, // use default platformUrl
           clientId: null,
           clientSecret: null,
         }),
@@ -94,7 +95,8 @@ export default function Home() {
           body: JSON.stringify({
             whiteLabel,
             connectorName,
-            platformUrl: `${BASE_URL}${API_PATH}`,
+            // platformUrl: `${BASE_URL}${API_PATH}`,
+            platformUrl: undefined, // use default platformUrl
             clientId: clientId,
             clientSecret: clientSecret,
           }),
@@ -140,7 +142,8 @@ export default function Home() {
         config,
         "newNonWhiteLabelUser" + Math.floor(Math.random() * 1000), // Random username for demo purposes
         nonWhiteLabelConnectorId!,
-        BASE_URL // Or your environment-specific platform URL
+        // BASE_URL
+        undefined // use default platformUrl
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
@@ -174,7 +177,8 @@ export default function Home() {
       clientId: clientId,
       clientSecret: clientSecret,
       apiKey: apiKey,
-      redirectUri: `${BASE_URL}${CALLBACK_PATH}`
+      // redirectUri: `${BASE_URL}${CALLBACK_PATH}`
+      redirectUri: `test${CALLBACK_PATH}` // ensure the redirectUri matches the one set in the Google Cloud Console
     };
 
     const popup = startGDriveOAuth({

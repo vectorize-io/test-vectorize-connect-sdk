@@ -7,7 +7,7 @@ import {manageGDriveUser, VectorizeAPIConfig} from '@vectorize-io/vectorize-conn
 const BASE_URL = 'http://localhost:3000';
 const API_PATH = '/api';
 
-const ALLOWED_ORIGINS = [BASE_URL]; 
+const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1']; 
 // Adjust this array for all the origins you want to allow
 
 /**
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         selectionData.refreshToken,
         userId,
         "add", // "edit" , "remove" are other options
-        `${BASE_URL}${API_PATH}`
+        // `${BASE_URL}${API_PATH}` // use default platformUrl = https://api.vectorize.io/v1
     );
 
     console.log("response", response);
