@@ -1,7 +1,15 @@
 // /api/google-callback/route.ts
-import { createGDrivePickerCallbackResponse } from 'vectorize-connect';
+import { createGDrivePickerCallbackResponse } from '@vectorize-io/vectorize-connect';
 import { type NextRequest } from 'next/server';
 
+// Base URL for API endpoints
+const CALLBACK_PATH = '/api/google-callback';
+
+/**
+ * Handles Google OAuth callback requests
+ * @param request - The incoming Next.js request with OAuth code and error parameters
+ * @returns Response from the Google Drive picker callback handler
+ */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
@@ -11,8 +19,8 @@ export async function GET(request: NextRequest) {
   const config = {
     clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
-    apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY!,
-    redirectUri: 'http://localhost:3001/api/google-callback'
+    apiKey: process.env.GOOGLE_API_KEY!,
+    redirectUri: "http://localhost:3001" + CALLBACK_PATH,
   };
 
   try {

@@ -1,21 +1,19 @@
 // app/api/google-drive-callback/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import {manageGDriveUser} from 'vectorize-connect';
+import {manageGDriveUser, VectorizeAPIConfig} from '@vectorize-io/vectorize-connect';
 
+// Base URL for API endpoints
+const BASE_URL = process.env.VECTORIZE_API_URL;
+const API_PATH = '/api';
 
-interface VectorizeAPIConfig {
-    organizationId: string;
-    authorization: string;
-  }
-
-const ALLOWED_ORIGINS = ['http://localhost:3000']; 
+const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1'].filter(Boolean); 
 // Adjust this array for all the origins you want to allow
 
 /**
  * Helper function to build a response with CORS headers.
  */
-function buildCorsResponse(body: any, status = 200, origin = 'http://localhost:3000') {
+function buildCorsResponse(body: any, status = 200, origin = BASE_URL || 'https://api.vectorize.io/v1') {
   const headers = new Headers({
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
@@ -28,7 +26,7 @@ function buildCorsResponse(body: any, status = 200, origin = 'http://localhost:3
 
 /**
  * Preflight handler for OPTIONS requests.
- * Browser sends this before POST if it’s a cross-origin request.
+ * Browser sends this before POST if it's a cross-origin request.
  */
 export async function OPTIONS(request: NextRequest) {
   // Check if the Origin of this request is allowed
@@ -58,19 +56,19 @@ export async function POST(request: NextRequest) {
 
     const config: VectorizeAPIConfig = {
         organizationId: process.env.VECTORIZE_ORG ?? "",
-        authorization: process.env.VECTORIZE_API_KEY ?? "",
+        authorization: process.env.VECTORIZE_TOKEN ?? "",
     };
 
     // Optionally, validate environment variables before proceeding
     if (!config.organizationId) {
         return NextResponse.json(
-        { error: "Missing VECTORIZE_ORG_ID in environment" },
+        { error: "Missing VECTORIZE_ORG in environment" },
         { status: 500 }
         );
     }
     if (!config.authorization) {
         return NextResponse.json(
-        { error: "Missing VECTORIZE_AUTH_TOKEN in environment" },
+        { error: "Missing VECTORIZE_TOKEN in environment" },
         { status: 500 }
         );
     }
@@ -88,34 +86,37 @@ export async function POST(request: NextRequest) {
          selectionData = body.selection;
     }
 
-    // Call the manageGDriveUser function from vectorize-connect
+    // Generate a random user ID for testing
+    const userId = "newTestUser" + Math.floor(Math.random() * 1000);
+
+    // Determine platformUrl - pass undefined if BASE_URL is not set
+    const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
+
+    // Call the manageGDriveUser function from @vectorize-io/vectorize-connect
     const response = await manageGDriveUser(
         config,
         connectorId,
-        selectionData.fileIds,
+        selectionData.selectedFiles,
         selectionData.refreshToken,
-        "newTestUser",
-        "add",
-        "http://localhost:3000/api"
+        userId,
+        "add", // "edit" , "remove" are other options
+        platformUrl // Use undefined if BASE_URL is not set
     );
 
-    console.log("reponse", response);
+    console.log("response", response);
 
     const data = await response.json();
 
-    console.log("data", data);
-
     if (!response.ok) {
         console.error("Error managing Google Drive user:", data.error);
-        return;
+        return buildCorsResponse({ error: 'Failed to process callback' }, 500);
     }
 
-    // Return success response with CORS headers
+    // Return success response with CORS headers and include the userId
     // Determine the origin
     const originHeader = request.headers.get('origin') || '';
     const origin = ALLOWED_ORIGINS.includes(originHeader) ? originHeader : 'null';
-    return buildCorsResponse({ success: true }, 200, origin);
-
+    return buildCorsResponse({ success: true, userId: userId }, 200, origin);
   } catch (error) {
     console.error('Error in Google Drive callback route:', error);
 
