@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import {manageGDriveUser, VectorizeAPIConfig} from '@vectorize-io/vectorize-connect';
 
 // Base URL for API endpoints
-const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.VECTORIZE_API_URL;
 const API_PATH = '/api';
 
-const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1']; 
+const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1'].filter(Boolean); 
 // Adjust this array for all the origins you want to allow
 
 /**

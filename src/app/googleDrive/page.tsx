@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vectorize-io/vectorize-connect';
 
 // Base URL for API endpoints
-const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.VECTORIZE_API_URL;
 const API_PATH = '/api';
 const CALLBACK_PATH = '/api/google-callback';
 
@@ -177,8 +177,8 @@ export default function Home() {
       clientId: clientId,
       clientSecret: clientSecret,
       apiKey: apiKey,
-      // redirectUri: `${BASE_URL}${CALLBACK_PATH}`
-      redirectUri: `test${CALLBACK_PATH}` // ensure the redirectUri matches the one set in the Google Cloud Console
+      // Use empty string if BASE_URL is not available
+      redirectUri: BASE_URL ? `${BASE_URL}${CALLBACK_PATH}` : ''
     };
 
     const popup = startGDriveOAuth({

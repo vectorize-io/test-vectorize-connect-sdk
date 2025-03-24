@@ -3,7 +3,7 @@ import { createGDrivePickerCallbackResponse } from '@vectorize-io/vectorize-conn
 import { type NextRequest } from 'next/server';
 
 // Base URL for API endpoints
-const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3001';
+const BASE_URL = process.env.VECTORIZE_API_URL;
 const CALLBACK_PATH = '/api/google-callback';
 
 /**
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
     apiKey: process.env.GOOGLE_API_KEY!,
-    redirectUri: `${BASE_URL}${CALLBACK_PATH}` // Ensure this matches your OAuth redirect URI
+    redirectUri: BASE_URL ? `${BASE_URL}${CALLBACK_PATH}` : '' // Use empty string if BASE_URL is not available
   };
 
   try {

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { createGDriveSourceConnector, VectorizeAPIConfig } from "@vectorize-io/vectorize-connect";
 
 // Base URL for API endpoints
-const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3000';
+const BASE_URL = process.env.VECTORIZE_API_URL;
 const API_PATH = '/api';
 
 /**
@@ -45,8 +45,8 @@ export async function POST(request: Request) {
       clientSecret,
     });
 
-    // Use environment variable for platformUrl if provided in request, otherwise use default
-    const apiPlatformUrl = platformUrl || `${BASE_URL}${API_PATH}`;
+    // Use provided platformUrl or pass undefined to use the default from vectorize-connect
+    const apiPlatformUrl = platformUrl;
     
     // 3. Call the utility function to create the connector
     const connectorId = await createGDriveSourceConnector(
