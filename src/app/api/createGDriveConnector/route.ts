@@ -3,6 +3,10 @@
 import { NextResponse } from "next/server";
 import { createGDriveSourceConnector, VectorizeAPIConfig } from "@vectorize-io/vectorize-connect";
 
+// Base URL for API endpoints
+const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3000';
+const API_PATH = '/api';
+
 /**
  * Creates a new Google Drive connector with the provided configuration
  * @param request - The incoming HTTP request containing connector configuration
@@ -41,12 +45,15 @@ export async function POST(request: Request) {
       clientSecret,
     });
 
+    // Use environment variable for platformUrl if provided in request, otherwise use default
+    const apiPlatformUrl = platformUrl || `${BASE_URL}${API_PATH}`;
+    
     // 3. Call the utility function to create the connector
     const connectorId = await createGDriveSourceConnector(
       config,
       whiteLabel,
       connectorName,
-      platformUrl,
+      apiPlatformUrl,
       clientId,
       clientSecret
     );

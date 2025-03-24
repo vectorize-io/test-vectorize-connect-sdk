@@ -3,7 +3,7 @@ import { createGDrivePickerCallbackResponse } from '@vectorize-io/vectorize-conn
 import { type NextRequest } from 'next/server';
 
 // Base URL for API endpoints
-const BASE_URL = 'http://localhost:3001';
+const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3001';
 const CALLBACK_PATH = '/api/google-callback';
 
 /**

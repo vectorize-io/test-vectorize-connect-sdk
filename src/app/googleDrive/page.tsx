@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vectorize-io/vectorize-connect';
 
-// Base URL for API endpoints for development
-const BASE_URL = 'http://localhost:3000';
+// Base URL for API endpoints
+const BASE_URL = process.env.VECTORIZE_API_URL || 'http://localhost:3000';
 const API_PATH = '/api';
 const CALLBACK_PATH = '/api/google-callback';
 
