@@ -3,10 +3,6 @@
 import { NextResponse } from "next/server";
 import { createGDriveSourceConnector, VectorizeAPIConfig } from "@vectorize-io/vectorize-connect";
 
-// Base URL for API endpoints
-const BASE_URL = process.env.VECTORIZE_API_URL;
-const API_PATH = '/api';
-
 /**
  * Creates a new Google Drive connector with the provided configuration
  * @param request - The incoming HTTP request containing connector configuration

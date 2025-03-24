@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vectorize-io/vectorize-connect';
 
 // Base URL for API endpoints
-const BASE_URL = process.env.VECTORIZE_API_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_VECTORIZE_API_URL;
 const API_PATH = '/api';
 const CALLBACK_PATH = '/api/google-callback';
 
@@ -36,6 +36,8 @@ export default function Home() {
     // Non-White Label: Set the parameters for the request
     const whiteLabel = false;
     const connectorName = "My Non-White Label Google Drive Connector";
+    // Only set platformUrl if BASE_URL exists
+    const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
   
     try {
       const response = await fetch("/api/createGDriveConnector", {
@@ -46,8 +48,7 @@ export default function Home() {
         body: JSON.stringify({
           whiteLabel,
           connectorName,
-          // platformUrl: `${BASE_URL}${API_PATH}`,
-          platformUrl: undefined, // use default platformUrl
+          platformUrl,
           clientId: null,
           clientSecret: null,
         }),
@@ -75,6 +76,8 @@ export default function Home() {
   const handleCreateWhiteLabelConnector = async () => {
     const whiteLabel = true;
     const connectorName = "My White Label Google Drive Connector";
+    // Only set platformUrl if BASE_URL exists
+    const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
 
     // Get the Google OAuth config
     const {clientId, clientSecret} = await fetch("/api/getGoogleOAuthConfig")
@@ -95,8 +98,7 @@ export default function Home() {
           body: JSON.stringify({
             whiteLabel,
             connectorName,
-            // platformUrl: `${BASE_URL}${API_PATH}`,
-            platformUrl: undefined, // use default platformUrl
+            platformUrl,
             clientId: clientId,
             clientSecret: clientSecret,
           }),
@@ -128,8 +130,7 @@ export default function Home() {
     setAddedUserId(null);
     
     try {
-
-      const config = await fetch ("/api/getVectorizeConfig")
+      const config = await fetch("/api/getVectorizeConfig")
       .then(response => response.json())
       .then(data => {
         return {
@@ -137,13 +138,16 @@ export default function Home() {
           authorization: data.authorization
         }
       });
+      
+      // Only set platformUrl if BASE_URL exists
+      const platformUrl = BASE_URL ? BASE_URL : undefined;
+      
       // Call the redirect function (opens in a new tab)
       await redirectToVectorizeGoogleDriveConnect(
         config,
         "newNonWhiteLabelUser" + Math.floor(Math.random() * 1000), // Random username for demo purposes
         nonWhiteLabelConnectorId!,
-        // BASE_URL
-        undefined // use default platformUrl
+        platformUrl
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
@@ -170,15 +174,16 @@ export default function Home() {
         clientSecret: data.clientSecret,
         apiKey: data.apiKey
       }
-    }
-    );
+    });
+    
+    // Set to your redirectUri
+    const redirectUri = "http://localhost:3001" + CALLBACK_PATH;
     
     const config = {
       clientId: clientId,
       clientSecret: clientSecret,
       apiKey: apiKey,
-      // Use empty string if BASE_URL is not available
-      redirectUri: BASE_URL ? `${BASE_URL}${CALLBACK_PATH}` : ''
+      redirectUri: redirectUri
     };
 
     const popup = startGDriveOAuth({

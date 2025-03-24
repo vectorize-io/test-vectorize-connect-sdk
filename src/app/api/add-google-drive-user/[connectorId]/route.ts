@@ -13,7 +13,7 @@ const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1'].filter(Boolean
 /**
  * Helper function to build a response with CORS headers.
  */
-function buildCorsResponse(body: any, status = 200, origin = BASE_URL) {
+function buildCorsResponse(body: any, status = 200, origin = BASE_URL || 'https://api.vectorize.io/v1') {
   const headers = new Headers({
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
@@ -89,6 +89,9 @@ export async function POST(request: NextRequest) {
     // Generate a random user ID for testing
     const userId = "newTestUser" + Math.floor(Math.random() * 1000);
 
+    // Determine platformUrl - pass undefined if BASE_URL is not set
+    const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
+
     // Call the manageGDriveUser function from @vectorize-io/vectorize-connect
     const response = await manageGDriveUser(
         config,
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
         selectionData.refreshToken,
         userId,
         "add", // "edit" , "remove" are other options
-        // `${BASE_URL}${API_PATH}` // use default platformUrl = https://api.vectorize.io/v1
+        platformUrl // Use undefined if BASE_URL is not set
     );
 
     console.log("response", response);
