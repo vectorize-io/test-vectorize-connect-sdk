@@ -103,7 +103,6 @@ export async function POST(request: NextRequest) {
         platformUrl // Use undefined if BASE_URL is not set
     );
 
-    console.log("response", response);
 
     const data = await response.json();
 

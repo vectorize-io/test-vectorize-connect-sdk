@@ -6,7 +6,8 @@ import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vector
 
 // Base URL for API endpoints
 const BASE_URL = process.env.NEXT_PUBLIC_VECTORIZE_API_URL;
-const API_PATH = '/api';
+const API_PATH = process.env.NEXT_PUBLIC_VECTORIZE_API_PATH;
+const redirect_URI = process.env.NEXT_PUBLIC_VECTORIZE_PLATFORM;
 const CALLBACK_PATH = '/api/google-callback';
 
 export default function Home() {
@@ -54,17 +55,14 @@ export default function Home() {
         }),
       });
       
-      console.log("response", response);
       
       const data = await response.json();
-      console.log("data", data);
   
       if (!response.ok) {
         console.error("Error creating connector:", data.error);
         return;
       }
-  
-      console.log("Connector created successfully:", data);
+
       // Set the non-white-label connector state
       setNonWhiteLabelConnectorId(data);
     } catch (error) {
@@ -104,17 +102,13 @@ export default function Home() {
           }),
         });
         
-        console.log("response", response);
         
         const data = await response.json();
-        console.log("data", data);
     
         if (!response.ok) {
           console.error("Error creating connector:", data.error);
           return;
         }
-    
-        console.log("Connector created successfully:", data);
         // Set the non-white-label connector state
         setWhiteLabelConnectorId(data);
     } catch (error) {
@@ -140,14 +134,13 @@ export default function Home() {
       });
       
       // Only set platformUrl if BASE_URL exists
-      const platformUrl = BASE_URL ? BASE_URL : undefined;
+      const platformUrl = BASE_URL? BASE_URL : undefined;
       
       // Call the redirect function (opens in a new tab)
       await redirectToVectorizeGoogleDriveConnect(
-        config,
-        "newNonWhiteLabelUser" + Math.floor(Math.random() * 1000), // Random username for demo purposes
-        nonWhiteLabelConnectorId!,
-        platformUrl
+        `/api/get_One_Time_Vectorize_Connector_Token?userId=${"newNonWhiteLabelUser" + Math.floor(Math.random() * 1000)}&connectorId=${nonWhiteLabelConnectorId!}`, // Random username for demo purposes
+        config.organizationId,
+        platformUrl,
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
@@ -188,10 +181,9 @@ export default function Home() {
 
     const popup = startGDriveOAuth({
       ...config,
-      scopes : [
-        'https://www.googleapis.com/auth/drive.readonly',
-        'https://www.googleapis.com/auth/drive.metadata.readonly',
-      ],
+      // scopes : [
+      //   'https://www.googleapis.com/auth/drive.file',
+      // ],
       onSuccess: async (selection) => {
         console.log('Google Drive connection successful:', selection);
 
