@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
     apiKey: process.env.GOOGLE_API_KEY!,
-    redirectUri: "http://localhost:3001" + CALLBACK_PATH,
+    redirectUri: "http://localhost:3000" + CALLBACK_PATH,
   };
 
   try {
