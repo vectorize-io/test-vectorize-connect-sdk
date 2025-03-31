@@ -116,15 +116,17 @@ export default function Home() {
     }
   };
 
-  // Handle the redirect to Google Drive connect for Non-White Label
-  const handleNonWhiteLabelConnectGoogleDrive = async () => {
-    setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-    setAddedUserId(null);
-    
-    try {
-      const config = await fetch("/api/getVectorizeConfig")
+
+// Handle the redirect to Google Drive connect for Non-White Label
+const handleNonWhiteLabelConnectGoogleDrive = async () => {
+  setIsLoading(true);
+  setError(null);
+  setSuccessMessage(null);
+  setAddedUserId(null);
+  
+  try {
+    // Get Vectorize configuration
+    const config = await fetch("/api/getVectorizeConfig")
       .then(response => response.json())
       .then(data => {
         return {
@@ -132,24 +134,40 @@ export default function Home() {
           authorization: data.authorization
         }
       });
-      
-      // Only set platformUrl if BASE_URL exists
-      const platformUrl = BASE_URL? BASE_URL : undefined;
-      
-      // Call the redirect function (opens in a new tab)
-      await redirectToVectorizeGoogleDriveConnect(
-        `/api/get_One_Time_Vectorize_Connector_Token?userId=${"newNonWhiteLabelUser" + Math.floor(Math.random() * 1000)}&connectorId=${nonWhiteLabelConnectorId!}`, // Random username for demo purposes
-        config.organizationId,
-        platformUrl,
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
-      setError(errorMessage);
-      console.error('Google Drive connection error:', err);
-    } finally {
-      setIsLoading(false);
+    
+    // Generate random user ID for demo purposes
+    const userId = "newNonWhiteLabelUser" + Math.floor(Math.random() * 1000);
+    
+    // Get one-time token from API
+    const tokenResponse = await fetch(`/api/get_One_Time_Vectorize_Connector_Token?userId=${userId}&connectorId=${nonWhiteLabelConnectorId!}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to generate one-time token. Status: ${response.status}`);
+        }
+        return response.json();
+      });
+    
+    if (!tokenResponse || !tokenResponse.token) {
+      throw new Error('Failed to generate one-time token');
     }
-  };
+    
+    // Only set platformUrl if redirect_URI exists
+    const platformUrl = redirect_URI ? redirect_URI : undefined;
+    
+    // Call the redirect function with the obtained token
+    await redirectToVectorizeGoogleDriveConnect(
+      tokenResponse.token,
+      config.organizationId,
+      platformUrl
+    );
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
+    setError(errorMessage);
+    console.error('Google Drive connection error:', err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Handle the redirect to Google Drive connect for White Label
   const handleWhiteLabelConnectGoogleDrive = async () => {
@@ -170,7 +188,7 @@ export default function Home() {
     });
     
     // Set to your redirectUri
-    const redirectUri = "http://localhost:3001" + CALLBACK_PATH;
+    const redirectUri = "http://localhost:3000" + CALLBACK_PATH;
     
     const config = {
       clientId: clientId,

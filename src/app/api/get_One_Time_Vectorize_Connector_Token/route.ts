@@ -9,21 +9,20 @@ import { NextRequest, NextResponse } from "next/server";
  * - Calls the Vectorize API to get a one-time token
  * - Returns the token response to the client
  */
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
     try {
       // Get authentication details from environment variables or secure storage
       const apiKey = process.env.VECTORIZE_TOKEN;
       const organizationId = process.env.VECTORIZE_ORG;
-
-      const Base_URL = process.env.VECTORIZE_API_URL
-      const API_Path = process.env.VECTORIZE_API_PATH
       
-      
-      if (!apiKey || !organizationId || !Base_URL || !API_Path) {
+      if (!apiKey || !organizationId) {
         return NextResponse.json({ 
           error: 'Missing Vectorize API configuration' 
         }, { status: 500 });
       }
+
+      const Base_URL = process.env.VECTORIZE_API_URL
+      const API_Path = process.env.VECTORIZE_API_PATH
       
       // Configure the Vectorize API client
       const config: VectorizeAPIConfig = {
@@ -43,16 +42,23 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
     }
 
-    console.log("getting one time connector token for userId:", userId, "and connectorId:", connectorId);
+
+
+    console.log("getting one time connector token for userId:", userId, "and connectorId:", connectorId, "with URL" , `${Base_URL}${API_Path}`);
+
+      // Determine platformUrl - pass undefined if BASE_URL is not set
+      const platformUrl = Base_URL ? `${Base_URL}${API_Path}` : undefined;
       
       // Call Vectorize API to get the token
       const tokenResponse = await getOneTimeConnectorToken(
         config,
         userId,
         connectorId,
-        `${Base_URL}${API_Path}`,
+        platformUrl,
       );
       
+      console.log("Token response:", tokenResponse);
+
       // Return the token to the client
       return NextResponse.json(tokenResponse, { status: 200 });
       

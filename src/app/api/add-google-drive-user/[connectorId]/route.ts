@@ -5,7 +5,7 @@ import {manageGDriveUser, VectorizeAPIConfig} from '@vectorize-io/vectorize-conn
 
 // Base URL for API endpoints
 const BASE_URL = process.env.VECTORIZE_API_URL;
-const API_PATH = '/api';
+const API_PATH = process.env.VECTORIZE_API_PATH;
 
 const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1'].filter(Boolean); 
 // Adjust this array for all the origins you want to allow
@@ -91,6 +91,14 @@ export async function POST(request: NextRequest) {
 
     // Determine platformUrl - pass undefined if BASE_URL is not set
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
+
+    console.log("Received request to add Google Drive user:", {
+        selectionData,
+        connectorId,
+        userId,
+        platformUrl,
+        config
+    });
 
     // Call the manageGDriveUser function from @vectorize-io/vectorize-connect
     const response = await manageGDriveUser(
