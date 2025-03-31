@@ -9,13 +9,13 @@ This repository provides a practical implementation of the Vectorize Connect SDK
 ## Features
 
 - Integration examples with the Vectorize Connect SDK
-- Google Drive connectivity demonstration
-- White label connector implementation
 - Interactive UI components for testing SDK functionality
+- Google Drive connectivity demonstration
+
 
 ## Prerequisites
 
-- Node.js (v16+)
+- Node.js
 - npm or yarn
 - A Vectorize account and API token
 
@@ -70,34 +70,10 @@ yarn dev
 
 The demo application provides a user interface to test various features of the Vectorize Connect SDK. You can:
 
-- Connect to your Vectorize account
 - Test Google Drive integrations
 - Try out white label connector functionality
 - Explore SDK methods and responses
 
-## Example Code
-
-Here's a simple example of how the SDK is implemented in this demo:
-
-```jsx
-import { VectorizeConnectClient } from '@vectorize-io/vectorize-connect';
-
-// Initialize the client
-const client = new VectorizeConnectClient({
-  token: process.env.VECTORIZE_TOKEN,
-  orgId: process.env.VECTORIZE_ORG
-});
-
-// Example function to connect to Google Drive
-async function connectGoogleDrive() {
-  const response = await client.connectors.google.authorize();
-  // Handle the response
-}
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
