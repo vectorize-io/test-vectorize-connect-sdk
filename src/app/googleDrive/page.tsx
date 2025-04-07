@@ -2,20 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { redirectToVectorizeGoogleDriveConnect, startGDriveOAuth } from '@vectorize-io/vectorize-connect';
+import { 
+  GoogleDriveOAuth, 
+  createVectorizeGDriveConnector, 
+  createWhiteLabelGDriveConnector,
+  getOneTimeConnectorToken,
+  GoogleDriveOAuthConfig 
+} from '@vectorize-io/vectorize-connect';
 
 // Base URL for API endpoints
 const BASE_URL = process.env.NEXT_PUBLIC_VECTORIZE_API_URL;
 const API_PATH = process.env.NEXT_PUBLIC_VECTORIZE_API_PATH;
 const redirect_URI = process.env.NEXT_PUBLIC_VECTORIZE_PLATFORM;
-const CALLBACK_PATH = '/api/google-callback';
+const CALLBACK_PATH = '/api/googleDrive/google-callback/';
 
 export default function Home() {
   const router = useRouter();
   
-  // Non-White Label states
-  const [nonWhiteLabelConnectorId, setNonWhiteLabelConnectorId] = useState<string | null>(null);
-  const [nonWhiteLabelInputConnectorId, setNonWhiteLabelInputConnectorId] = useState<string>("");
+  // Vectorize states
+  const [vectorizeConnectorId, setVectorizeConnectorId] = useState<string | null>(null);
+  const [vectorizeInputConnectorId, setVectorizeInputConnectorId] = useState<string>("");
 
   // White Label states 
   const [whiteLabelConnectorId, setWhiteLabelConnectorId] = useState<string | null>(null);
@@ -33,28 +39,24 @@ export default function Home() {
     router.push('/');
   };
 
-  const handleCreateNonWhiteLabelConnector = async () => {
-    // Non-White Label: Set the parameters for the request
-    const whiteLabel = false;
-    const connectorName = "My Non-White Label Google Drive Connector";
+  const handleCreateVectorizeConnector = async () => {
+    // Create a Vectorize Google Drive connector
+    const connectorName = "My Vectorize Google Drive Connector";
     // Only set platformUrl if BASE_URL exists
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
   
     try {
-      const response = await fetch("/api/createGDriveConnector", {
+      const response = await fetch("/api/createSourceConnector", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          whiteLabel,
+          connectorType: "vectorize",
           connectorName,
-          platformUrl,
-          clientId: null,
-          clientSecret: null,
+          platformUrl
         }),
       });
-      
       
       const data = await response.json();
   
@@ -63,22 +65,21 @@ export default function Home() {
         return;
       }
 
-      // Set the non-white-label connector state
-      setNonWhiteLabelConnectorId(data);
+      // Set the vectorize connector state
+      setVectorizeConnectorId(data);
     } catch (error) {
       console.error("Unexpected error:", error);
     }
   };
 
-  // Placeholder function for creating a White Label connector
+  // Function for creating a White Label connector
   const handleCreateWhiteLabelConnector = async () => {
-    const whiteLabel = true;
     const connectorName = "My White Label Google Drive Connector";
     // Only set platformUrl if BASE_URL exists
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
 
     // Get the Google OAuth config
-    const {clientId, clientSecret} = await fetch("/api/getGoogleOAuthConfig")
+    const {clientId, clientSecret} = await fetch("/api/googleDrive/getGoogleOAuthConfig")
     .then(response => response.json())
     .then(data => {
       return {
@@ -88,20 +89,19 @@ export default function Home() {
     });
 
     try {
-        const response = await fetch("/api/createGDriveConnector", {
+        const response = await fetch("/api/createSourceConnector", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            whiteLabel,
+            connectorType: "whiteLabel",
             connectorName,
             platformUrl,
-            clientId: clientId,
-            clientSecret: clientSecret,
+            clientId,
+            clientSecret,
           }),
         });
-        
         
         const data = await response.json();
     
@@ -109,16 +109,16 @@ export default function Home() {
           console.error("Error creating connector:", data.error);
           return;
         }
-        // Set the non-white-label connector state
+        // Set the white-label connector state
         setWhiteLabelConnectorId(data);
     } catch (error) {
-      console.error("Error creating White Label multi custom connector:", error);
+      console.error("Error creating White Label connector:", error);
     }
   };
 
 
-// Handle the redirect to Google Drive connect for Non-White Label
-const handleNonWhiteLabelConnectGoogleDrive = async () => {
+// Handle the redirect to Google Drive connect for Vectorize
+const handleVectorizeConnectGoogleDrive = async () => {
   setIsLoading(true);
   setError(null);
   setSuccessMessage(null);
@@ -136,10 +136,10 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
       });
     
     // Generate random user ID for demo purposes
-    const userId = "newNonWhiteLabelUser" + Math.floor(Math.random() * 1000);
+    const userId = "newVectorizeUser" + Math.floor(Math.random() * 1000);
     
     // Get one-time token from API
-    const tokenResponse = await fetch(`/api/get_One_Time_Vectorize_Connector_Token?userId=${userId}&connectorId=${nonWhiteLabelConnectorId!}`)
+    const tokenResponse = await fetch(`/api/get_One_Time_Vectorize_Connector_Token?userId=${userId}&connectorId=${vectorizeConnectorId!}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`Failed to generate one-time token. Status: ${response.status}`);
@@ -155,7 +155,7 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
     const platformUrl = redirect_URI ? redirect_URI : undefined;
     
     // Call the redirect function with the obtained token
-    await redirectToVectorizeGoogleDriveConnect(
+    await GoogleDriveOAuth.redirectToConnect(
       tokenResponse.token,
       config.organizationId,
       platformUrl
@@ -177,7 +177,7 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
     setAddedUserId(null);
 
     // fetch the Google OAuth config
-    const {clientId, clientSecret, apiKey} = await fetch("/api/getGoogleOAuthConfig")
+    const {clientId, clientSecret, apiKey} = await fetch("/api/googleDrive/getGoogleOAuthConfig")
     .then(response => response.json())
     .then(data => {
       return {
@@ -188,20 +188,16 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
     });
     
     // Set to your redirectUri
-    const redirectUri = "http://localhost:3000" + CALLBACK_PATH;
+    const redirectUri = "http://localhost:3001" + CALLBACK_PATH;
     
-    const config = {
-      clientId: clientId,
-      clientSecret: clientSecret,
-      apiKey: apiKey,
-      redirectUri: redirectUri
-    };
-
-    const popup = startGDriveOAuth({
-      ...config,
-      // scopes : [
-      //   'https://www.googleapis.com/auth/drive.file',
-      // ],
+    const config: GoogleDriveOAuthConfig = {
+      clientId,
+      clientSecret,
+      apiKey,
+      redirectUri,
+      scopes: [
+        'https://www.googleapis.com/auth/drive.file',
+      ],
       onSuccess: async (selection) => {
         console.log('Google Drive connection successful:', selection);
 
@@ -209,7 +205,7 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
         const connectorId = whiteLabelConnectorId;
 
         // after user finishes selection, send the data to vectorize
-        const url = `/api/add-google-drive-user/${connectorId}`;
+        const url = `/api/add-oauth-user/${connectorId}`;
         const body = JSON.stringify({ status: 'success', selection: { selectedFiles, refreshToken } });
 
         const response = await fetch(url, {
@@ -241,7 +237,9 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
         setError(error.message);
         setIsLoading(false);
       }
-    });
+    };
+
+    const popup = GoogleDriveOAuth.startOAuth(config);
     
     if (!popup) {
       setError('Failed to open Google Drive connection popup');
@@ -249,8 +247,8 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
     }
   };
 
-  const handleClearConnectorId = () => {
-    setNonWhiteLabelConnectorId(null);
+  const handleClearVectorizeConnectorId = () => {
+    setVectorizeConnectorId(null);
   };
 
   // Clear White Label connector state
@@ -258,18 +256,18 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
     setWhiteLabelConnectorId(null);
   };
 
-  // Handle input for non-white-label connector ID
-  const handleNonWhiteLabelConnectorIdInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle input for vectorize connector ID
+  const handleVectorizeConnectorIdInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setNonWhiteLabelInputConnectorId(value);
+    setVectorizeInputConnectorId(value);
   };
 
-  // Handle using the input connector ID for non-white-label
-  const handleUseNonWhiteLabelConnectorId = () => {
-    if (nonWhiteLabelInputConnectorId.trim()) {
-      setNonWhiteLabelConnectorId(nonWhiteLabelInputConnectorId.trim());
+  // Handle using the input connector ID for vectorize
+  const handleUseVectorizeConnectorId = () => {
+    if (vectorizeInputConnectorId.trim()) {
+      setVectorizeConnectorId(vectorizeInputConnectorId.trim());
       // Clear the input after setting the connector ID
-      setNonWhiteLabelInputConnectorId("");
+      setVectorizeInputConnectorId("");
     }
   };
 
@@ -421,25 +419,25 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
         </div>
       </section>
 
-      {/* NON WHITE LABEL SECTION */}
+      {/* Vectorize Connector Section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold">NON WHITE LABEL</h2>
+        <h2 className="text-lg font-semibold">Vectorize Connector</h2>
 
         {/* Add input field for connector ID */}
         <div className="flex items-center gap-2">
           <input
             type="text"
-            value={nonWhiteLabelInputConnectorId}
-            onChange={handleNonWhiteLabelConnectorIdInput}
+            value={vectorizeInputConnectorId}
+            onChange={handleVectorizeConnectorIdInput}
             placeholder="Enter existing connector ID"
             className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
             disabled={false}
           />
           <button
-            onClick={handleUseNonWhiteLabelConnectorId}
-            disabled={nonWhiteLabelInputConnectorId.trim() === ""}
+            onClick={handleUseVectorizeConnectorId}
+            disabled={vectorizeInputConnectorId.trim() === ""}
             className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              nonWhiteLabelInputConnectorId.trim() === "" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+              vectorizeInputConnectorId.trim() === "" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
@@ -447,22 +445,22 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
         </div>
 
         <button
-          onClick={handleCreateNonWhiteLabelConnector}
-          disabled={!!nonWhiteLabelConnectorId}
+          onClick={handleCreateVectorizeConnector}
+          disabled={!!vectorizeConnectorId}
           className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-            nonWhiteLabelConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            vectorizeConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
-          Create a new non white label Google Drive connector
+          Create a new Vectorize Google Drive connector
         </button>
 
         <div className="space-y-4">
           <button 
-            onClick={handleNonWhiteLabelConnectGoogleDrive}
-            disabled={!nonWhiteLabelConnectorId || isLoading}
+            onClick={handleVectorizeConnectGoogleDrive}
+            disabled={!vectorizeConnectorId || isLoading}
             className={`
               bg-green-600 text-white px-4 py-2 rounded-lg
-              ${(!nonWhiteLabelConnectorId || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
+              ${(!vectorizeConnectorId || isLoading) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
               flex items-center gap-2
             `}
           >
@@ -486,7 +484,7 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
                   <path d="M24 38L16 26H32L24 38Z" fill="#FBBC04" />
                   <path d="M32 26V38L24 38L32 26Z" fill="#EA4335" />
                 </svg>
-                Connect with Google Drive using Non-White-Label
+                Connect with Google Drive using Vectorize
               </>
             )}
           </button>
@@ -494,18 +492,18 @@ const handleNonWhiteLabelConnectGoogleDrive = async () => {
 
         <div className="flex items-center gap-3 w-fit bg-gray-50 rounded-lg p-4">
           <div>
-            <h3 className="text-sm font-medium text-gray-700">Non white label Connector:</h3>
+            <h3 className="text-sm font-medium text-gray-700">Vectorize Connector ID:</h3>
             <p className="mt-1 text-sm font-mono">
-              {nonWhiteLabelConnectorId ? (
-                <span className="text-black">{nonWhiteLabelConnectorId}</span>
+              {vectorizeConnectorId ? (
+                <span className="text-black">{vectorizeConnectorId}</span>
               ) : (
                 <span className="text-gray-400 italic">undefined</span>
               )}
             </p>
           </div>
-          {nonWhiteLabelConnectorId && (
+          {vectorizeConnectorId && (
             <button
-              onClick={handleClearConnectorId}
+              onClick={handleClearVectorizeConnectorId}
               className="ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
             >
               Clear

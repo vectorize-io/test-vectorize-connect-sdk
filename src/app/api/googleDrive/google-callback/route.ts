@@ -1,9 +1,9 @@
 // /api/google-callback/route.ts
-import { createGDrivePickerCallbackResponse } from '@vectorize-io/vectorize-connect';
+import { GoogleDriveOAuth, GoogleDriveOAuthConfig } from '@vectorize-io/vectorize-connect';
 import { type NextRequest } from 'next/server';
 
 // Base URL for API endpoints
-const CALLBACK_PATH = '/api/google-callback';
+const CALLBACK_PATH = '/api/googleDrive/google-callback/';
 
 /**
  * Handles Google OAuth callback requests
@@ -16,16 +16,19 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error');
 
   // Create config object with all required fields
-  const config = {
+  const config: GoogleDriveOAuthConfig = {
     clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
     apiKey: process.env.GOOGLE_API_KEY!,
-    redirectUri: "http://localhost:3000" + CALLBACK_PATH,
+    redirectUri: "http://localhost:3001" + CALLBACK_PATH,
+    // These callbacks won't be used in this context, but are required by the type
+    onSuccess: () => {},
+    onError: () => {}
   };
 
   try {
-    // New API: createCallbackResponse takes code, config, and optional error
-    return createGDrivePickerCallbackResponse(
+    // Use the GoogleDriveOAuth class to create the callback response
+    return await GoogleDriveOAuth.createCallbackResponse(
       code || '',  // code is required, pass empty string if null
       config,
       error || undefined  // pass the error if it exists
@@ -33,7 +36,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     // In case of any unexpected errors
     const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-    return createGDrivePickerCallbackResponse(
+    return await GoogleDriveOAuth.createCallbackResponse(
       '',
       config,
       errorMessage
