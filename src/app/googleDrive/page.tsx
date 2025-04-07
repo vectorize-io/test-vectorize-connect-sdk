@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   GoogleDriveOAuth, 
-  createVectorizeGDriveConnector, 
-  createWhiteLabelGDriveConnector,
-  getOneTimeConnectorToken,
-  GoogleDriveOAuthConfig 
+  GoogleDriveOAuthConfig,
+  GoogleDriveSelection
 } from '@vectorize-io/vectorize-connect';
 
 // Base URL for API endpoints
@@ -27,7 +25,13 @@ export default function Home() {
   const [whiteLabelConnectorId, setWhiteLabelConnectorId] = useState<string | null>(null);
   const [whiteLabelInputConnectorId, setWhiteLabelInputConnectorId] = useState<string>("");
 
+  // State for refresh token and selected files
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, { name: string; mimeType: string }> | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Add state for success message and userId
@@ -204,13 +208,33 @@ const handleVectorizeConnectGoogleDrive = async () => {
         const { selectedFiles, refreshToken } = selection;
         const connectorId = whiteLabelConnectorId;
 
+        // Save the selection data in state for potential editing later
+        setSelectedFiles(selectedFiles);
+        setRefreshToken(refreshToken);
+
+        // Generate random user ID for demo purposes if none exists
+        const newUserId = userId || "newWhiteLabelUser" + Math.floor(Math.random() * 1000);
+        setUserId(newUserId);
+
         // after user finishes selection, send the data to vectorize
         const url = `/api/add-oauth-user/${connectorId}`;
-        const body = JSON.stringify({ status: 'success', selection: { selectedFiles, refreshToken } });
+        
+        // Create the payload with connector type included
+        const payload = {
+          status: 'success', 
+          connectorType: 'googleDrive', // Specify the connector type
+          selection: { 
+            selectedFiles, 
+            refreshToken 
+          }
+        };
 
         const response = await fetch(url, {
           method: 'POST',
-          body
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
         });
 
         const responseData = await response.json();
@@ -226,6 +250,7 @@ const handleVectorizeConnectGoogleDrive = async () => {
         // Display success message with the userId from the response
         if (responseData.userId) {
           setAddedUserId(responseData.userId);
+          setUserId(responseData.userId);
           setSuccessMessage(`User ${responseData.userId} successfully added!`);
         } else {
           setSuccessMessage('Google Drive user added successfully!');
@@ -247,6 +272,104 @@ const handleVectorizeConnectGoogleDrive = async () => {
     }
   };
 
+  // Handle editing file selections for existing user
+  const handleEditFileSelections = async () => {
+    setIsEditing(true);
+    setError(null);
+  
+    try {
+      // fetch the Google OAuth config
+      const {clientId, clientSecret, apiKey} = await fetch("/api/googleDrive/getGoogleOAuthConfig")
+        .then(response => response.json())
+        .then(data => {
+          return {
+            clientId: data.clientId,
+            clientSecret: data.clientSecret,
+            apiKey: data.apiKey
+          }
+        });
+      
+      // Set to your redirectUri
+      const redirectUri = "http://localhost:3001" + CALLBACK_PATH;
+      
+      const config: GoogleDriveOAuthConfig = {
+        clientId,
+        clientSecret,
+        apiKey,
+        redirectUri,
+        scopes: [
+          'https://www.googleapis.com/auth/drive.file',
+        ],
+        onSuccess: async (selection) => {
+          console.log('Google Drive selection updated:', selection);
+        
+          const { selectedFiles, refreshToken: newRefreshToken } = selection;
+          const connectorId = whiteLabelConnectorId;
+        
+          // Update the selection data in state
+          setSelectedFiles(selectedFiles);
+          setRefreshToken(newRefreshToken);
+        
+          // Call the API to update the user's selections
+          try {
+            const response = await fetch(`/api/edit-oauth-user/${connectorId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                connectorType: 'googleDrive',
+                userId: userId,
+                selectedFiles,
+                refreshToken: newRefreshToken
+              })
+            });
+        
+            const responseData = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(responseData.error || 'Failed to update Google Drive files');
+            }
+        
+            console.log('Google Drive files updated successfully', responseData);
+            setSuccessMessage('File selections updated successfully!');
+          } catch (error) {
+            setError(error instanceof Error ? error.message : 'Failed to update selections');
+            console.error('Update error:', error);
+          } finally {
+            setIsEditing(false);
+          }
+        },
+        onError: (error) => {
+          setError(error.message);
+          setIsEditing(false);
+        }
+      };
+      
+      // Check if we have a refresh token to use
+      if (!refreshToken) {
+        throw new Error('No refresh token available. Please connect to Google Drive first.');
+      }
+  
+      // Create an instance of GoogleDriveSelection and call the method
+      const selectionHelper = new GoogleDriveSelection();
+      const popup = await selectionHelper.startFileSelection(
+        config,
+        refreshToken,
+        selectedFiles || undefined
+      );
+      
+      if (!popup) {
+        throw new Error('Failed to open file selection window');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to edit file selections';
+      setError(errorMessage);
+      console.error('Edit selections error:', err);
+      setIsEditing(false);
+    }
+  };
+
   const handleClearVectorizeConnectorId = () => {
     setVectorizeConnectorId(null);
   };
@@ -254,6 +377,9 @@ const handleVectorizeConnectGoogleDrive = async () => {
   // Clear White Label connector state
   const handleClearWhiteLabelConnectorId = () => {
     setWhiteLabelConnectorId(null);
+    setSelectedFiles(null);
+    setRefreshToken(null);
+    setUserId(null);
   };
 
   // Handle input for vectorize connector ID
@@ -387,15 +513,45 @@ const handleVectorizeConnectGoogleDrive = async () => {
           Create a new White Label Google Drive connector
         </button>
         
-        <button
-          onClick={handleWhiteLabelConnectGoogleDrive}
-          disabled={!whiteLabelConnectorId || isLoading}
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            !whiteLabelConnectorId || isLoading ? "bg-gray-400 text-white opacity-50 cursor-not-allowed" : "bg-blue-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          {isLoading ? "Connecting..." : "Connect with Google Drive using White Label"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleWhiteLabelConnectGoogleDrive}
+            disabled={!whiteLabelConnectorId || isLoading || isEditing}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              !whiteLabelConnectorId || isLoading || isEditing ? 
+                "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
+                "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
+          >
+            {isLoading ? "Connecting..." : "Connect with Google Drive using White Label"}
+          </button>
+          
+          {/* Edit Selections Button */}
+          <button
+            onClick={handleEditFileSelections}
+            disabled={!whiteLabelConnectorId || !refreshToken || isLoading || isEditing}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              !whiteLabelConnectorId || !refreshToken || isLoading || isEditing ? 
+                "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
+                "bg-purple-600 text-white hover:bg-purple-700"
+            }`}
+          >
+            {isEditing ? (
+              <span className="flex items-center">
+                <span className="animate-spin mr-2">⚪</span>
+                Editing...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Selections
+              </span>
+            )}
+          </button>
+        </div>
 
         <div className="flex items-center gap-3 w-fit bg-gray-50 rounded-lg p-4">
           <div>
@@ -407,6 +563,11 @@ const handleVectorizeConnectGoogleDrive = async () => {
                 <span className="text-gray-400 italic">undefined</span>
               )}
             </p>
+            {selectedFiles && (
+              <p className="mt-1 text-xs text-gray-500">
+                {Object.keys(selectedFiles).length} files selected
+              </p>
+            )}
           </div>
           {whiteLabelConnectorId && (
             <button

@@ -1,4 +1,4 @@
-// app/api/add-oauth-user/[connectorId]/route.ts
+// /api/edit-oauth-user/[connectorId]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { manageGDriveUser, VectorizeAPIConfig } from '@vectorize-io/vectorize-connect';
@@ -7,8 +7,7 @@ import { manageGDriveUser, VectorizeAPIConfig } from '@vectorize-io/vectorize-co
 const BASE_URL = process.env.VECTORIZE_API_URL;
 const API_PATH = process.env.VECTORIZE_API_PATH;
 
-const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1'].filter(Boolean); 
-// Adjust this array for all the origins you want to allow
+const ALLOWED_ORIGINS = [BASE_URL, 'https://api.vectorize.io/v1'].filter(Boolean);
 
 /**
  * Helper function to build a response with CORS headers.
@@ -26,80 +25,70 @@ function buildCorsResponse(body: any, status = 200, origin = BASE_URL || 'https:
 
 /**
  * Preflight handler for OPTIONS requests.
- * Browser sends this before POST if it's a cross-origin request.
  */
 export async function OPTIONS(request: NextRequest) {
-  // Check if the Origin of this request is allowed
   const originHeader = request.headers.get('origin') || '';
   const origin = ALLOWED_ORIGINS.includes(originHeader) ? originHeader : 'null';
-
-  // Return CORS headers
   return buildCorsResponse(null, 200, origin);
 }
 
 /**
- * Handle POST requests
+ * Handle POST requests for editing a user's file selections
  */
 export async function POST(request: NextRequest) {
   try {
-    // Create a URL object from the incoming request URL
+    // Extract the connector ID from the URL
     const url = new URL(request.url);
-
-    // Split the pathname into segments
     const segments = url.pathname.split('/');
-    
-    // Assuming the URL is of the format:
-    // /api/add-oauth-user/{connectorId}
-    // the connectorId will be the last segment of the pathname.
     const connectorId = segments[segments.length - 1];
 
+    // Set up the Vectorize API config
     const config: VectorizeAPIConfig = {
       organizationId: process.env.VECTORIZE_ORG ?? "",
       authorization: process.env.VECTORIZE_TOKEN ?? "",
     };
 
-    // Optionally, validate environment variables before proceeding
+    // Validate the config
     if (!config.organizationId) {
-      return NextResponse.json(
-        { error: "Missing VECTORIZE_ORG in environment" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Missing VECTORIZE_ORG in environment" }, { status: 500 });
     }
     if (!config.authorization) {
-      return NextResponse.json(
-        { error: "Missing VECTORIZE_TOKEN in environment" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Missing VECTORIZE_TOKEN in environment" }, { status: 500 });
     }
 
-    // Get the request body
+    // Parse the request body
     const body = await request.json();
 
     if (!body) {
       throw new Error('Request body is required');
     }
 
-    // Extract connector type from the request body
-    const connectorType = body.connectorType || 'googleDrive'; // Default to googleDrive for backward compatibility
-    
-    let selectionData = null;
-    if (body.status === 'success') {
-      selectionData = body.selection;
-    }
+    // Extract the necessary data from the request
+    const { connectorType, userId, selectedFiles, refreshToken } = body;
 
-    // Generate a random user ID for testing
-    const userId = "newTestUser" + Math.floor(Math.random() * 1000);
+    // Validate the required fields
+    if (!connectorType) {
+      return NextResponse.json({ error: "Missing connectorType in request" }, { status: 400 });
+    }
+    if (!userId) {
+      return NextResponse.json({ error: "Missing userId in request" }, { status: 400 });
+    }
+    if (!refreshToken) {
+      return NextResponse.json({ error: "Missing refreshToken in request" }, { status: 400 });
+    }
+    if (!selectedFiles) {
+      return NextResponse.json({ error: "Missing selectedFiles in request" }, { status: 400 });
+    }
 
     // Determine platformUrl - pass undefined if BASE_URL is not set
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
 
-    console.log("Received request to add user:", {
+    console.log("Received request to edit user files:", {
       connectorType,
-      selectionData,
       connectorId,
       userId,
-      platformUrl,
-      config
+      filesCount: Object.keys(selectedFiles).length,
+      platformUrl
     });
 
     let response;
@@ -107,77 +96,55 @@ export async function POST(request: NextRequest) {
     // Handle different connector types
     switch (connectorType) {
       case 'googleDrive':
-        // Call the manageGDriveUser function for Google Drive connectors
-        if (!selectionData || !selectionData.selectedFiles || !selectionData.refreshToken) {
-          throw new Error('Selected files and refresh token are required for Google Drive connectors');
-        }
-
+        // Call the manageGDriveUser function with the 'edit' action
         response = await manageGDriveUser(
           config,
           connectorId,
-          selectionData.selectedFiles,
-          selectionData.refreshToken,
+          selectedFiles,
+          refreshToken,
           userId,
-          "add", // "edit" , "remove" are other options
+          "edit", // Use "edit" action for updating files
           platformUrl
         );
         break;
 
       // Add cases for other connector types here
-      // case 'dropbox':
-      //   response = await manageDropboxUser(...);
-      //   break;
-
+      
       default:
         throw new Error(`Unsupported connector type: ${connectorType}`);
     }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error(`Error managing ${connectorType} user:`, errorData);
+      console.error(`Error editing ${connectorType} user files:`, errorData);
       return buildCorsResponse({ 
-        error: `Failed to process ${connectorType} callback`,
+        error: `Failed to edit ${connectorType} file selections`,
         details: errorData 
       }, 500);
     }
 
     const responseData = await response.json().catch(() => ({}));
 
-    // Return success response with CORS headers and include the userId
     // Determine the origin
     const originHeader = request.headers.get('origin') || '';
     const origin = ALLOWED_ORIGINS.includes(originHeader) ? originHeader : 'null';
+
+    // Return success response
     return buildCorsResponse({ 
       success: true, 
+      message: 'File selections updated successfully',
       userId: userId,
       connectorType: connectorType,
       data: responseData
     }, 200, origin);
   } catch (error) {
-    console.error('Error in OAuth callback route:', error);
+    console.error('Error in edit OAuth user route:', error);
 
     // Return error JSON with CORS headers
-    // Choose the appropriate origin, or set as 'null'
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return buildCorsResponse({ 
-      error: 'Failed to process callback',
+      error: 'Failed to process edit request',
       message: errorMessage 
     }, 500);
   }
-}
-
-/**
- * Handle GET requests
- */
-export async function GET(request: NextRequest) {
-  // Determine the origin
-  const originHeader = request.headers.get('origin') || '';
-  const origin = ALLOWED_ORIGINS.includes(originHeader) ? originHeader : 'null';
-
-  console.log('Received GET request to OAuth callback:', request.url);
-
-  // Return simple response for GET requests, with CORS headers
-  return buildCorsResponse({
-    message: 'OAuth callback endpoint is working. This endpoint expects POST requests with JSON data.'
-  }, 200, origin);
 }
