@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { 
   GoogleDriveOAuth, 
   GoogleDriveOAuthConfig,
@@ -809,40 +810,33 @@ const handleVectorizeRemoveUser = async () => {
         </button>
 
         <div className="flex gap-3">
-          <button 
-            onClick={handleVectorizeConnectGoogleDrive}
-            disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving}
-            className={`
-              bg-green-600 text-white px-4 py-2 rounded-lg
-              ${(!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
-              flex items-center gap-2
-            `}
-          >
-            {isLoading ? (
-              <>
-                <span className="animate-spin mr-2">⚪</span>
-                Connecting...
-              </>
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  className="mr-2"
-                >
-                  <path d="M24 14L16 26L8 14H24Z" fill="#0F9D58" />
-                  <path d="M24 14H40L32 26H16L24 14Z" fill="#4285F4" />
-                  <path d="M16 26V38L8 26H16Z" fill="#188038" />
-                  <path d="M24 38L16 26H32L24 38Z" fill="#FBBC04" />
-                  <path d="M32 26V38L24 38L32 26Z" fill="#EA4335" />
-                </svg>
-                Connect with Google Drive using Vectorize
-              </>
-            )}
-          </button>
+        <button 
+          onClick={handleVectorizeConnectGoogleDrive}
+          disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving}
+          className={`
+            bg-green-600 text-white px-4 py-2 rounded-lg
+            ${(!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
+            flex items-center gap-2
+          `}
+        >
+          {isLoading ? (
+            <>
+              <span className="animate-spin mr-2">⚪</span>
+              Connecting...
+            </>
+          ) : (
+            <>
+              <Image 
+                src="/GDrive.png" 
+                alt="Google Drive Logo" 
+                width={20} 
+                height={20} 
+                className="mr-2"
+              />
+              Connect with Google Drive using Vectorize
+            </>
+          )}
+        </button>
           
           {/* Edit Button for Vectorize */}
           <button

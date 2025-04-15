@@ -7,6 +7,7 @@ import {
   DropboxOAuthConfig,
   DropboxSelection
 } from '@vectorize-io/vectorize-connect';
+import Image from 'next/image';
 
 // Base URL for API endpoints
 const BASE_URL = process.env.NEXT_PUBLIC_VECTORIZE_API_URL;
@@ -807,36 +808,33 @@ const handleVectorizeRemoveUser = async () => {
         </button>
 
         <div className="flex gap-3">
-          <button 
-            onClick={handleVectorizeConnectDropbox}
-            disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving}
-            className={`
-              bg-green-600 text-white px-4 py-2 rounded-lg
-              ${(!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
-              flex items-center gap-2
-            `}
-          >
-            {isLoading ? (
-              <>
-                <span className="animate-spin mr-2">⚪</span>
-                Connecting...
-              </>
-            ) : (
-              <>
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="white" 
-                  className="mr-2"
-                >
-                  <path d="M12 0L5.637 6.364 0 11.931l5.637 5.568L12 23.862l6.364-5.568 5.637-5.568-5.637-5.567L12 0z"/>
-                </svg>
-                Connect with Dropbox using Vectorize
-              </>
-            )}
-          </button>
+        <button 
+          onClick={handleVectorizeConnectDropbox}
+          disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving}
+          className={`
+            bg-green-600 text-white px-4 py-2 rounded-lg
+            ${(!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
+            flex items-center gap-2
+          `}
+        >
+          {isLoading ? (
+            <>
+              <span className="animate-spin mr-2">⚪</span>
+              Connecting...
+            </>
+          ) : (
+            <>
+              <Image 
+                src="/dropbox-wbg.png" 
+                alt="Dropbox Logo" 
+                width={20} 
+                height={20} 
+                className="mr-2"
+              />
+              Connect with Dropbox using Vectorize
+            </>
+          )}
+        </button>
           
           {/* Edit Button for Vectorize */}
           <button
