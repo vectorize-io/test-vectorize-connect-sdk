@@ -35,6 +35,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isVectorizeEditing, setIsVectorizeEditing] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Add state for success message and userId
@@ -235,6 +236,51 @@ const handleVectorizeEditGoogleDrive = async () => {
   }
 };
 
+// Handle removing a Vectorize user
+const handleVectorizeRemoveUser = async () => {
+  if (!vectorizeUserId || !vectorizeConnectorId) {
+    setError('No user ID or connector ID available for Vectorize');
+    return;
+  }
+
+  setIsRemoving(true);
+  setError(null);
+  setSuccessMessage(null);
+
+  try {
+    // Call the manage-oauth-user endpoint with 'remove' action
+    const response = await fetch(`/api/manage-oauth-user/${vectorizeConnectorId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        connectorType: 'googleDrive',
+        action: 'remove',
+        userId: vectorizeUserId
+      })
+    });
+
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(responseData.error || 'Failed to remove Vectorize Google Drive user');
+    }
+
+    console.log('Vectorize Google Drive user removed successfully', responseData);
+    setSuccessMessage(`Vectorize user ${vectorizeUserId} successfully removed!`);
+    
+    // Clear the Vectorize user data
+    setVectorizeUserId(null);
+    setIsVectorizeConnected(false);
+  } catch (error) {
+    setError(error instanceof Error ? error.message : 'Failed to remove Vectorize user');
+    console.error('Vectorize user removal error:', error);
+  } finally {
+    setIsRemoving(false);
+  }
+};
+
   // Handle the redirect to Google Drive connect for White Label
   const handleWhiteLabelConnectGoogleDrive = async () => {
     setIsLoading(true);
@@ -286,6 +332,7 @@ const handleVectorizeEditGoogleDrive = async () => {
           status: 'success', 
           connectorType: 'googleDrive',
           action: 'add', // Specify the action
+          userId: newUserId,
           selection: { 
             selectedFiles, 
             refreshToken 
@@ -436,12 +483,16 @@ const handleVectorizeEditGoogleDrive = async () => {
     }
   };
 
-  // Handle removing a user
+  // Handle removing a White Label user
   const handleRemoveUser = async () => {
     if (!userId || !whiteLabelConnectorId) {
       setError('No user ID or connector ID available');
       return;
     }
+
+    setIsRemoving(true);
+    setError(null);
+    setSuccessMessage(null);
 
     try {
       // Call the manage-oauth-user endpoint with 'remove' action
@@ -473,6 +524,8 @@ const handleVectorizeEditGoogleDrive = async () => {
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to remove user');
       console.error('Remove user error:', error);
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -598,13 +651,13 @@ const handleVectorizeEditGoogleDrive = async () => {
             onChange={handleWhiteLabelConnectorIdInput}
             placeholder="Enter existing connector ID"
             className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
-            disabled={false}
+            disabled={isRemoving}
           />
           <button
             onClick={handleUseWhiteLabelConnectorId}
-            disabled={whiteLabelInputConnectorId.trim() === ""}
+            disabled={whiteLabelInputConnectorId.trim() === "" || isRemoving}
             className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              whiteLabelInputConnectorId.trim() === "" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+              whiteLabelInputConnectorId.trim() === "" || isRemoving ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
@@ -613,9 +666,9 @@ const handleVectorizeEditGoogleDrive = async () => {
 
         <button
           onClick={handleCreateWhiteLabelConnector}
-          disabled={!!whiteLabelConnectorId}
+          disabled={!!whiteLabelConnectorId || isRemoving}
           className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-            whiteLabelConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            whiteLabelConnectorId || isRemoving ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
           Create a new White Label Google Drive connector
@@ -624,9 +677,9 @@ const handleVectorizeEditGoogleDrive = async () => {
         <div className="flex gap-3">
           <button
             onClick={handleWhiteLabelConnectGoogleDrive}
-            disabled={!whiteLabelConnectorId || isLoading || isEditing}
+            disabled={!whiteLabelConnectorId || isLoading || isEditing || isRemoving}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              !whiteLabelConnectorId || isLoading || isEditing ? 
+              !whiteLabelConnectorId || isLoading || isEditing || isRemoving ? 
                 "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
                 "bg-blue-600 text-white hover:bg-blue-700"
             }`}
@@ -637,9 +690,9 @@ const handleVectorizeEditGoogleDrive = async () => {
           {/* Edit Selections Button */}
           <button
             onClick={handleEditFileSelections}
-            disabled={!whiteLabelConnectorId || !refreshToken || isLoading || isEditing}
+            disabled={!whiteLabelConnectorId || !refreshToken || isLoading || isEditing || isRemoving}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              !whiteLabelConnectorId || !refreshToken || isLoading || isEditing ? 
+              !whiteLabelConnectorId || !refreshToken || isLoading || isEditing || isRemoving ? 
                 "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
                 "bg-purple-600 text-white hover:bg-purple-700"
             }`}
@@ -663,20 +716,24 @@ const handleVectorizeEditGoogleDrive = async () => {
           {/* Remove User Button */}
           <button
             onClick={handleRemoveUser}
-            disabled={!whiteLabelConnectorId || !userId}
+            disabled={!whiteLabelConnectorId || !userId || isLoading || isEditing || isRemoving}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              !whiteLabelConnectorId || !userId ? 
+              !whiteLabelConnectorId || !userId || isLoading || isEditing || isRemoving ? 
                 "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
                 "bg-red-600 text-white hover:bg-red-700"
             }`}
           >
             <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="M3 6h18"></path>
-                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path>
-                <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
-              </svg>
-              Remove User
+              {isRemoving ? (
+                <span className="animate-spin mr-2">⚪</span>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path>
+                  <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                </svg>
+              )}
+              {isRemoving ? "Removing..." : "Remove User"}
             </span>
           </button>
         </div>
@@ -705,7 +762,10 @@ const handleVectorizeEditGoogleDrive = async () => {
           {whiteLabelConnectorId && (
             <button
               onClick={handleClearWhiteLabelConnectorId}
-              className="ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              disabled={isRemoving}
+              className={`ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors ${
+                isRemoving ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Clear
             </button>
@@ -725,13 +785,13 @@ const handleVectorizeEditGoogleDrive = async () => {
             onChange={handleVectorizeConnectorIdInput}
             placeholder="Enter existing connector ID"
             className="px-3 py-2 border border-gray-300 rounded-lg flex-grow text-black"
-            disabled={false}
+            disabled={isRemoving}
           />
           <button
             onClick={handleUseVectorizeConnectorId}
-            disabled={vectorizeInputConnectorId.trim() === ""}
+            disabled={vectorizeInputConnectorId.trim() === "" || isRemoving}
             className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-              vectorizeInputConnectorId.trim() === "" ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+              vectorizeInputConnectorId.trim() === "" || isRemoving ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
           >
             Use Connector ID
@@ -740,9 +800,9 @@ const handleVectorizeEditGoogleDrive = async () => {
 
         <button
           onClick={handleCreateVectorizeConnector}
-          disabled={!!vectorizeConnectorId}
+          disabled={!!vectorizeConnectorId || isRemoving}
           className={`bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors ${
-            vectorizeConnectorId ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            vectorizeConnectorId || isRemoving ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
           Create a new Vectorize Google Drive connector
@@ -751,10 +811,10 @@ const handleVectorizeEditGoogleDrive = async () => {
         <div className="flex gap-3">
           <button 
             onClick={handleVectorizeConnectGoogleDrive}
-            disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing}
+            disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving}
             className={`
               bg-green-600 text-white px-4 py-2 rounded-lg
-              ${(!vectorizeConnectorId || isLoading || isVectorizeEditing) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
+              ${(!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-700'}
               flex items-center gap-2
             `}
           >
@@ -784,12 +844,12 @@ const handleVectorizeEditGoogleDrive = async () => {
             )}
           </button>
           
-          {/* Add Edit Button for Vectorize */}
+          {/* Edit Button for Vectorize */}
           <button
             onClick={handleVectorizeEditGoogleDrive}
-            disabled={!vectorizeConnectorId || !isVectorizeConnected || isLoading || isVectorizeEditing}
+            disabled={!vectorizeConnectorId || !isVectorizeConnected || isLoading || isVectorizeEditing || isRemoving}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              !vectorizeConnectorId || !isVectorizeConnected || isLoading || isVectorizeEditing ? 
+              !vectorizeConnectorId || !isVectorizeConnected || isLoading || isVectorizeEditing || isRemoving ? 
                 "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
                 "bg-purple-600 text-white hover:bg-purple-700"
             }`}
@@ -808,6 +868,30 @@ const handleVectorizeEditGoogleDrive = async () => {
                 Edit Vectorize Files
               </span>
             )}
+          </button>
+          
+          {/* Remove User Button for Vectorize */}
+          <button
+            onClick={handleVectorizeRemoveUser}
+            disabled={!vectorizeConnectorId || !vectorizeUserId || !isVectorizeConnected || isLoading || isVectorizeEditing || isRemoving}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              !vectorizeConnectorId || !vectorizeUserId || !isVectorizeConnected || isLoading || isVectorizeEditing || isRemoving ? 
+                "bg-gray-400 text-white opacity-50 cursor-not-allowed" : 
+                "bg-red-600 text-white hover:bg-red-700"
+            }`}
+          >
+            <span className="flex items-center">
+              {isRemoving ? (
+                <span className="animate-spin mr-2">⚪</span>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path>
+                  <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                </svg>
+              )}
+              {isRemoving ? "Removing..." : "Remove User"}
+            </span>
           </button>
         </div>
 
@@ -830,7 +914,10 @@ const handleVectorizeEditGoogleDrive = async () => {
           {vectorizeConnectorId && (
             <button
               onClick={handleClearVectorizeConnectorId}
-              className="ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              disabled={isRemoving}
+              className={`ml-4 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors ${
+                isRemoving ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Clear
             </button>
