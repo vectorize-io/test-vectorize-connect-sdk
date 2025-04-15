@@ -1,7 +1,7 @@
 // app/api/add-oauth-user/[connectorId]/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { manageGDriveUser, VectorizeAPIConfig } from '@vectorize-io/vectorize-connect';
+import { manageGDriveUser, manageDropboxUser, VectorizeAPIConfig } from '@vectorize-io/vectorize-connect';
 
 // Base URL for API endpoints
 const BASE_URL = process.env.VECTORIZE_API_URL;
@@ -80,21 +80,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract connector type from the request body
-    const connectorType = body.connectorType || 'googleDrive'; // Default to googleDrive for backward compatibility
+    const connectorType = body.connectorType;
     
-    let selectionData = null;
-    if (body.status === 'success') {
-      selectionData = body.selection;
-    }
+    // Extract action from the request body, default to "add" if not provided
+    const action = body.action
+    
+    const selectionData = body.selection;
 
-    // Generate a random user ID for testing
-    const userId = "newTestUser" + Math.floor(Math.random() * 1000);
+    const userId = body.userId;
 
     // Determine platformUrl - pass undefined if BASE_URL is not set
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
 
-    console.log("Received request to add user:", {
+    console.log("Received request to manage user:", {
       connectorType,
+      action,
       selectionData,
       connectorId,
       userId,
@@ -108,25 +108,37 @@ export async function POST(request: NextRequest) {
     switch (connectorType) {
       case 'googleDrive':
         // Call the manageGDriveUser function for Google Drive connectors
-        if (!selectionData || !selectionData.selectedFiles || !selectionData.refreshToken) {
-          throw new Error('Selected files and refresh token are required for Google Drive connectors');
+        if (action !== "remove" && (!selectionData || !selectionData.selectedFiles || !selectionData.refreshToken)) {
+          throw new Error('Selected files and refresh token are required for Google Drive connectors (except for remove action)');
         }
 
         response = await manageGDriveUser(
           config,
           connectorId,
-          selectionData.selectedFiles,
-          selectionData.refreshToken,
+          selectionData?.selectedFiles || null,
+          selectionData?.refreshToken || "",
           userId,
-          "add", // "edit" , "remove" are other options
+          action, // Use the action from the request body
           platformUrl
         );
         break;
+      
+      case 'dropbox':
+        // Call the manageDropboxUser function for Dropbox connectors
+        if (action !== "remove" && (!selectionData || !selectionData.selectedFiles || !selectionData.refreshToken)) {
+          throw new Error('Selected files and refresh token are required for Dropbox connectors (except for remove action)');
+        }
 
-      // Add cases for other connector types here
-      // case 'dropbox':
-      //   response = await manageDropboxUser(...);
-      //   break;
+        response = await manageDropboxUser(
+          config,
+          connectorId,
+          selectionData?.selectedFiles || null,
+          selectionData?.refreshToken || "",
+          userId,
+          action, // Use the action from the request body
+          platformUrl
+        );
+        break;
 
       default:
         throw new Error(`Unsupported connector type: ${connectorType}`);
@@ -136,7 +148,7 @@ export async function POST(request: NextRequest) {
       const errorData = await response.json().catch(() => ({}));
       console.error(`Error managing ${connectorType} user:`, errorData);
       return buildCorsResponse({ 
-        error: `Failed to process ${connectorType} callback`,
+        error: `Failed to process ${connectorType} ${action} operation`,
         details: errorData 
       }, 500);
     }
@@ -151,6 +163,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       userId: userId,
       connectorType: connectorType,
+      action: action,
       data: responseData
     }, 200, origin);
   } catch (error) {

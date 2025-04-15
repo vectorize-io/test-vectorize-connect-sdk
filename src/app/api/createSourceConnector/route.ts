@@ -3,7 +3,9 @@
 import { NextResponse } from "next/server";
 import { 
   createVectorizeGDriveConnector, 
-  createWhiteLabelGDriveConnector, 
+  createWhiteLabelGDriveConnector,
+  createVectorizeDropboxConnector,
+  createWhiteLabelDropboxConnector,
   VectorizeAPIConfig 
 } from "@vectorize-io/vectorize-connect";
 
@@ -20,7 +22,9 @@ export async function POST(request: Request) {
       connectorName, 
       platformUrl, 
       clientId, 
-      clientSecret 
+      clientSecret,
+      appKey,
+      appSecret
     } = await request.json();
 
     // 2. Gather environment variables for your Vectorize config
@@ -55,7 +59,7 @@ export async function POST(request: Request) {
     // 3. Call the appropriate function based on connector type
     let connectorId: string;
     
-    if (connectorType === "whiteLabel") {
+    if (connectorType === "GDriveWhiteLabel") {
       // Validate required parameters for white label connector
       if (!clientId || !clientSecret) {
         return NextResponse.json(
@@ -71,15 +75,37 @@ export async function POST(request: Request) {
         clientSecret,
         apiPlatformUrl
       );
-    } else if (connectorType === "vectorize") {
+    } else if (connectorType === "GDriveVectorize") {
       connectorId = await createVectorizeGDriveConnector(
+        config,
+        connectorName,
+        apiPlatformUrl
+      );
+    } else if (connectorType === "DropboxWhiteLabel") {
+      // Validate required parameters for white label Dropbox connector
+      if (!appKey || !appSecret) {
+        return NextResponse.json(
+          { error: "App Key and App Secret are required for white label Dropbox connectors" },
+          { status: 400 }
+        );
+      }
+      
+      connectorId = await createWhiteLabelDropboxConnector(
+        config,
+        connectorName,
+        appKey,
+        appSecret,
+        apiPlatformUrl
+      );
+    } else if (connectorType === "DropboxVectorize") {
+      connectorId = await createVectorizeDropboxConnector(
         config,
         connectorName,
         apiPlatformUrl
       );
     } else {
       return NextResponse.json(
-        { error: "Invalid connector type. Must be 'vectorize' or 'whiteLabel'" },
+        { error: "Invalid connector type. Must be one of: 'GDriveWhiteLabel', 'GDriveVectorize', 'DropboxWhiteLabel', 'DropboxVectorize'" },
         { status: 400 }
       );
     }
