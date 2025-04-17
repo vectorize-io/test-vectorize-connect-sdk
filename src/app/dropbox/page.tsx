@@ -2,18 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { 
-  GoogleDriveOAuth, 
-  GoogleDriveOAuthConfig,
-  GoogleDriveSelection
+  DropboxOAuth, 
+  DropboxOAuthConfig,
+  DropboxSelection
 } from '@vectorize-io/vectorize-connect';
+import Image from 'next/image';
 
 // Base URL for API endpoints
 const BASE_URL = process.env.NEXT_PUBLIC_VECTORIZE_API_URL;
 const API_PATH = process.env.NEXT_PUBLIC_VECTORIZE_API_PATH;
 const redirect_URI = process.env.NEXT_PUBLIC_VECTORIZE_PLATFORM;
-const CALLBACK_PATH = '/api/googleDrive/google-callback/';
+const CALLBACK_PATH = '/api/dropbox/dropbox-callback/';
 
 export default function Home() {
   const router = useRouter();
@@ -49,8 +49,8 @@ export default function Home() {
   };
 
   const handleCreateVectorizeConnector = async () => {
-    // Create a Vectorize Google Drive connector
-    const connectorName = "My Vectorize Google Drive Connector";
+    // Create a Vectorize Dropbox connector
+    const connectorName = "My Vectorize Dropbox Connector";
     // Only set platformUrl if BASE_URL exists
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
   
@@ -61,7 +61,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          connectorType: "GDriveVectorize",
+          connectorType: "DropboxVectorize",
           connectorName,
           platformUrl
         }),
@@ -83,17 +83,17 @@ export default function Home() {
 
   // Function for creating a White Label connector
   const handleCreateWhiteLabelConnector = async () => {
-    const connectorName = "My White Label Google Drive Connector";
+    const connectorName = "My White Label Dropbox Connector";
     // Only set platformUrl if BASE_URL exists
     const platformUrl = BASE_URL ? `${BASE_URL}${API_PATH}` : undefined;
 
-    // Get the Google OAuth config
-    const {clientId, clientSecret} = await fetch("/api/googleDrive/getGoogleOAuthConfig")
+    // Get the Dropbox OAuth config
+    const {appKey, appSecret} = await fetch("/api/dropbox/getDropboxOAuthConfig")
     .then(response => response.json())
     .then(data => {
       return {
-        clientId: data.clientId,
-        clientSecret: data.clientSecret
+        appKey: data.appKey,
+        appSecret: data.appSecret
       }
     });
 
@@ -104,11 +104,11 @@ export default function Home() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            connectorType: "GDriveWhiteLabel",
+            connectorType: "DropboxWhiteLabel",
             connectorName,
             platformUrl,
-            clientId,
-            clientSecret,
+            appKey,
+            appSecret,
           }),
         });
         
@@ -126,8 +126,8 @@ export default function Home() {
   };
 
 
-// Handle the redirect to Google Drive connect for Vectorize
-const handleVectorizeConnectGoogleDrive = async () => {
+// Handle the redirect to Dropbox connect for Vectorize
+const handleVectorizeConnectDropbox = async () => {
   setIsLoading(true);
   setError(null);
   setSuccessMessage(null);
@@ -165,7 +165,7 @@ const handleVectorizeConnectGoogleDrive = async () => {
     const platformUrl = redirect_URI ? redirect_URI : undefined;
     
     // Call the redirect function with the obtained token
-    await GoogleDriveOAuth.redirectToVectorizeConnect(
+    await DropboxOAuth.redirectToVectorizeConnect(
       tokenResponse.token,
       config.organizationId,
       platformUrl
@@ -173,18 +173,18 @@ const handleVectorizeConnectGoogleDrive = async () => {
     
     // Mark as connected for demo purposes
     setIsVectorizeConnected(true);
-    setSuccessMessage("Successfully connected to Google Drive!");
+    setSuccessMessage("Successfully connected to Dropbox!");
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Google Drive';
+    const errorMessage = err instanceof Error ? err.message : 'Failed to connect to Dropbox';
     setError(errorMessage);
-    console.error('Google Drive connection error:', err);
+    console.error('Dropbox connection error:', err);
   } finally {
     setIsLoading(false);
   }
 };
 
-// Handle editing Google Drive files for Vectorize connector
-const handleVectorizeEditGoogleDrive = async () => {
+// Handle editing Dropbox files for Vectorize connector
+const handleVectorizeEditDropbox = async () => {
   setIsVectorizeEditing(true);
   setError(null);
   setSuccessMessage(null);
@@ -201,7 +201,7 @@ const handleVectorizeEditGoogleDrive = async () => {
       });
     
     if (!vectorizeUserId) {
-      throw new Error('No user ID found. Please connect to Google Drive first.');
+      throw new Error('No user ID found. Please connect to Dropbox first.');
     }
     
     // Get one-time token from API for edit operation
@@ -221,17 +221,17 @@ const handleVectorizeEditGoogleDrive = async () => {
     const platformUrl = redirect_URI ? redirect_URI : undefined;
     
     // Call the redirect function with the obtained token
-    await GoogleDriveOAuth.redirectToVectorizeEdit(
+    await DropboxOAuth.redirectToVectorizeEdit(
       tokenResponse.token,
       config.organizationId,
       platformUrl
     );
     
-    setSuccessMessage("Successfully updated Google Drive file selections!");
+    setSuccessMessage("Successfully updated Dropbox file selections!");
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to edit Google Drive files';
+    const errorMessage = err instanceof Error ? err.message : 'Failed to edit Dropbox files';
     setError(errorMessage);
-    console.error('Google Drive edit error:', err);
+    console.error('Dropbox edit error:', err);
   } finally {
     setIsVectorizeEditing(false);
   }
@@ -256,7 +256,7 @@ const handleVectorizeRemoveUser = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        connectorType: 'googleDrive',
+        connectorType: 'dropbox',
         action: 'remove',
         userId: vectorizeUserId
       })
@@ -265,10 +265,10 @@ const handleVectorizeRemoveUser = async () => {
     const responseData = await response.json();
     
     if (!response.ok) {
-      throw new Error(responseData.error || 'Failed to remove Vectorize Google Drive user');
+      throw new Error(responseData.error || 'Failed to remove Vectorize Dropbox user');
     }
 
-    console.log('Vectorize Google Drive user removed successfully', responseData);
+    console.log('Vectorize Dropbox user removed successfully', responseData);
     setSuccessMessage(`Vectorize user ${vectorizeUserId} successfully removed!`);
     
     // Clear the Vectorize user data
@@ -282,37 +282,37 @@ const handleVectorizeRemoveUser = async () => {
   }
 };
 
-  // Handle the redirect to Google Drive connect for White Label
-  const handleWhiteLabelConnectGoogleDrive = async () => {
+  // Handle the redirect to Dropbox connect for White Label
+  const handleWhiteLabelConnectDropbox = async () => {
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
     setAddedUserId(null);
 
-    // fetch the Google OAuth config
-    const {clientId, clientSecret, apiKey} = await fetch("/api/googleDrive/getGoogleOAuthConfig")
+    // fetch the Dropbox OAuth config
+    const {appKey, appSecret} = await fetch("/api/dropbox/getDropboxOAuthConfig")
     .then(response => response.json())
     .then(data => {
       return {
-        clientId: data.clientId,
-        clientSecret: data.clientSecret,
-        apiKey: data.apiKey
+        appKey: data.appKey,
+        appSecret: data.appSecret
       }
     });
     
     // Set to your redirectUri
     const redirectUri = "http://localhost:3001" + CALLBACK_PATH;
     
-    const config: GoogleDriveOAuthConfig = {
-      clientId,
-      clientSecret,
-      apiKey,
+    const config: DropboxOAuthConfig = {
+      appKey,
+      appSecret,
       redirectUri,
+      // Dropbox scopes
       scopes: [
-        'https://www.googleapis.com/auth/drive.file',
+        'files.metadata.read',
+        'files.content.read'
       ],
       onSuccess: async (selection) => {
-        console.log('Google Drive connection successful:', selection);
+        console.log('Dropbox connection successful:', selection);
 
         const { selectedFiles, refreshToken } = selection;
         const connectorId = whiteLabelConnectorId;
@@ -331,9 +331,9 @@ const handleVectorizeRemoveUser = async () => {
         // Create the payload with connector type and action included
         const payload = {
           status: 'success', 
-          connectorType: 'googleDrive',
+          connectorType: 'dropbox', // Specify the connector type
           action: 'add', // Specify the action
-          userId: newUserId,
+          userId: newUserId, // Use the generated or existing userId
           selection: { 
             selectedFiles, 
             refreshToken 
@@ -351,12 +351,12 @@ const handleVectorizeRemoveUser = async () => {
         const responseData = await response.json();
         
         if (!response.ok) {
-          setError('Failed to add Google Drive user');
+          setError('Failed to add Dropbox user');
           setIsLoading(false);
           return;
         }
 
-        console.log('Google Drive user added successfully', responseData);
+        console.log('Dropbox user added successfully', responseData);
         
         // Display success message with the userId from the response
         if (responseData.userId) {
@@ -364,7 +364,7 @@ const handleVectorizeRemoveUser = async () => {
           setUserId(responseData.userId);
           setSuccessMessage(`User ${responseData.userId} successfully added!`);
         } else {
-          setSuccessMessage('Google Drive user added successfully!');
+          setSuccessMessage('Dropbox user added successfully!');
         }
         
         setIsLoading(false);
@@ -375,10 +375,10 @@ const handleVectorizeRemoveUser = async () => {
       }
     };
 
-    const popup = GoogleDriveOAuth.startOAuth(config);
+    const popup = DropboxOAuth.startOAuth(config);
     
     if (!popup) {
-      setError('Failed to open Google Drive connection popup');
+      setError('Failed to open Dropbox connection popup');
       setIsLoading(false);
     }
   };
@@ -389,39 +389,37 @@ const handleVectorizeRemoveUser = async () => {
     setError(null);
   
     try {
-      // fetch the Google OAuth config
-      const {clientId, clientSecret, apiKey} = await fetch("/api/googleDrive/getGoogleOAuthConfig")
+      // fetch the Dropbox OAuth config
+      const {appKey, appSecret} = await fetch("/api/dropbox/getDropboxOAuthConfig")
         .then(response => response.json())
         .then(data => {
           return {
-            clientId: data.clientId,
-            clientSecret: data.clientSecret,
-            apiKey: data.apiKey
+            appKey: data.appKey,
+            appSecret: data.appSecret
           }
         });
       
       // Set to your redirectUri
       const redirectUri = "http://localhost:3001" + CALLBACK_PATH;
       
-      const config: GoogleDriveOAuthConfig = {
-        clientId,
-        clientSecret,
-        apiKey,
+      const config: DropboxOAuthConfig = {
+        appKey,
+        appSecret,
         redirectUri,
         scopes: [
-          'https://www.googleapis.com/auth/drive.file',
+          'files.metadata.read',
+          'files.content.read'
         ],
         onSuccess: async (selection) => {
-          console.log('Google Drive selection updated:', selection);
+          console.log('Dropbox selection updated:', selection);
         
-          const { selectedFiles, refreshToken: newRefreshToken } = selection;
+          const { selectedFiles } = selection;
           const connectorId = whiteLabelConnectorId;
         
           // Update the selection data in state
           setSelectedFiles(selectedFiles);
-          setRefreshToken(newRefreshToken);
         
-          // Call the API to update the user's selections with the manage-oauth-user endpoint
+          // Call the API to update the user's selections using the manage-oauth-user endpoint
           try {
             const response = await fetch(`/api/manage-oauth-user/${connectorId}`, {
               method: 'POST',
@@ -429,12 +427,12 @@ const handleVectorizeRemoveUser = async () => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                connectorType: 'googleDrive',
+                connectorType: 'dropbox',
                 action: 'edit', // Specify the edit action
                 userId: userId,
                 selection: {
                   selectedFiles,
-                  refreshToken: newRefreshToken
+                  refreshToken: refreshToken
                 }
               })
             });
@@ -442,10 +440,10 @@ const handleVectorizeRemoveUser = async () => {
             const responseData = await response.json();
             
             if (!response.ok) {
-              throw new Error(responseData.error || 'Failed to update Google Drive files');
+              throw new Error(responseData.error || 'Failed to update Dropbox files');
             }
         
-            console.log('Google Drive files updated successfully', responseData);
+            console.log('Dropbox files updated successfully', responseData);
             setSuccessMessage('File selections updated successfully!');
           } catch (error) {
             setError(error instanceof Error ? error.message : 'Failed to update selections');
@@ -462,11 +460,11 @@ const handleVectorizeRemoveUser = async () => {
       
       // Check if we have a refresh token to use
       if (!refreshToken) {
-        throw new Error('No refresh token available. Please connect to Google Drive first.');
+        throw new Error('No refresh token available. Please connect to Dropbox first.');
       }
   
-      // Create an instance of GoogleDriveSelection and call the method
-      const selectionHelper = new GoogleDriveSelection();
+      // Create an instance of DropboxSelection and call the method
+      const selectionHelper = new DropboxSelection();
       const popup = await selectionHelper.startFileSelection(
         config,
         refreshToken,
@@ -503,7 +501,7 @@ const handleVectorizeRemoveUser = async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          connectorType: 'googleDrive',
+          connectorType: 'dropbox',
           action: 'remove', // Specify the remove action
           userId: userId
         })
@@ -512,10 +510,10 @@ const handleVectorizeRemoveUser = async () => {
       const responseData = await response.json();
       
       if (!response.ok) {
-        throw new Error(responseData.error || 'Failed to remove Google Drive user');
+        throw new Error(responseData.error || 'Failed to remove Dropbox user');
       }
 
-      console.log('Google Drive user removed successfully', responseData);
+      console.log('Dropbox user removed successfully', responseData);
       setSuccessMessage(`User ${userId} successfully removed!`);
       
       // Clear the user data
@@ -672,12 +670,12 @@ const handleVectorizeRemoveUser = async () => {
             whiteLabelConnectorId || isRemoving ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
-          Create a new White Label Google Drive connector
+          Create a new White Label Dropbox connector
         </button>
         
         <div className="flex gap-3">
           <button
-            onClick={handleWhiteLabelConnectGoogleDrive}
+            onClick={handleWhiteLabelConnectDropbox}
             disabled={!whiteLabelConnectorId || isLoading || isEditing || isRemoving}
             className={`px-4 py-2 rounded-lg transition-colors ${
               !whiteLabelConnectorId || isLoading || isEditing || isRemoving ? 
@@ -685,7 +683,7 @@ const handleVectorizeRemoveUser = async () => {
                 "bg-blue-600 text-white hover:bg-blue-700"
             }`}
           >
-            {isLoading ? "Connecting..." : "Connect with Google Drive using White Label"}
+            {isLoading ? "Connecting..." : "Connect with Dropbox using White Label"}
           </button>
           
           {/* Edit Selections Button */}
@@ -806,12 +804,12 @@ const handleVectorizeRemoveUser = async () => {
             vectorizeConnectorId || isRemoving ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
           }`}
         >
-          Create a new Vectorize Google Drive connector
+          Create a new Vectorize Dropbox connector
         </button>
 
         <div className="flex gap-3">
         <button 
-          onClick={handleVectorizeConnectGoogleDrive}
+          onClick={handleVectorizeConnectDropbox}
           disabled={!vectorizeConnectorId || isLoading || isVectorizeEditing || isRemoving}
           className={`
             bg-green-600 text-white px-4 py-2 rounded-lg
@@ -827,20 +825,20 @@ const handleVectorizeRemoveUser = async () => {
           ) : (
             <>
               <Image 
-                src="/GDrive.png" 
-                alt="Google Drive Logo" 
+                src="/dropbox-wbg.png" 
+                alt="Dropbox Logo" 
                 width={20} 
                 height={20} 
                 className="mr-2"
               />
-              Connect with Google Drive using Vectorize
+              Connect with Dropbox using Vectorize
             </>
           )}
         </button>
           
           {/* Edit Button for Vectorize */}
           <button
-            onClick={handleVectorizeEditGoogleDrive}
+            onClick={handleVectorizeEditDropbox}
             disabled={!vectorizeConnectorId || !isVectorizeConnected || isLoading || isVectorizeEditing || isRemoving}
             className={`px-4 py-2 rounded-lg transition-colors ${
               !vectorizeConnectorId || !isVectorizeConnected || isLoading || isVectorizeEditing || isRemoving ? 
@@ -863,7 +861,7 @@ const handleVectorizeRemoveUser = async () => {
               </span>
             )}
           </button>
-          
+
           {/* Remove User Button for Vectorize */}
           <button
             onClick={handleVectorizeRemoveUser}
