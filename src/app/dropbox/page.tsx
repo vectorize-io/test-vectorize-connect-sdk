@@ -143,7 +143,7 @@ const handleVectorizeConnectDropbox = async () => {
           authorization: data.authorization
         }
       });
-    
+    const awsKey = "AKIA1234567890ABCDEF";
     const problemSecret = "AKIAIOSFODNN7EXAMPLE";
     // Generate random user ID for demo purposes
     const randomUserId = "newVectorizeUser" + Math.floor(Math.random() * 10000);
