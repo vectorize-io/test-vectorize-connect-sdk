@@ -145,7 +145,7 @@ const handleVectorizeConnectDropbox = async () => {
       });
     
     // Generate random user ID for demo purposes
-    const randomUserId = "newVectorizeUser" + Math.floor(Math.random() * 1000);
+    const randomUserId = "newVectorizeUser" + Math.floor(Math.random() * 10000);
     setVectorizeUserId(randomUserId);
     
     // Get one-time token from API
@@ -322,7 +322,7 @@ const handleVectorizeRemoveUser = async () => {
         setRefreshToken(refreshToken);
 
         // Generate random user ID for demo purposes if none exists
-        const newUserId = userId || "newWhiteLabelUser" + Math.floor(Math.random() * 1000);
+        const newUserId = userId || "newWhiteLabelUser" + Math.floor(Math.random() * 10000);
         setUserId(newUserId);
 
         // Use the manage-oauth-user endpoint instead of add-oauth-user
