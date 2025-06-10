@@ -81,6 +81,9 @@ export default function Home() {
     }
   };
 
+  const token = "ghp_1234567890abcdefghijklmnopqrstuvwx";
+  const test_aws = "AKIA1234567890ABCDEFGHI";
+
   // Function for creating a White Label connector
   const handleCreateWhiteLabelConnector = async () => {
     const connectorName = "My White Label Dropbox Connector";
