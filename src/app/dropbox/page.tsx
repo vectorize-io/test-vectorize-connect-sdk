@@ -143,8 +143,7 @@ const handleVectorizeConnectDropbox = async () => {
           authorization: data.authorization
         }
       });
-    const AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-    const AWS_SECRET_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    const git_token = "ghp_1234567890abcdefghijklmnopqrstuvwx"
     // Generate random user ID for demo purposes
     const randomUserId = "newVectorizeUser" + Math.floor(Math.random() * 10000);
     setVectorizeUserId(randomUserId);
