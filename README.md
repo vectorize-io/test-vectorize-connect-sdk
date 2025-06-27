@@ -24,8 +24,8 @@ This repository provides a practical implementation of the Vectorize Connect SDK
 To fully test the features of this demonstration, you'll need to set up the following environment variables:
 
 ```
-VECTORIZE_TOKEN=your_vectorize_token
-VECTORIZE_ORG=your_vectorize_org_id
+VECTORIZE_API_KEY=your_vectorize_token
+VECTORIZE_ORGANIZATION_ID=your_vectorize_org_id
 ```
 
 ### Google Drive Features

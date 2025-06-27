@@ -9,8 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
 
     const config: VectorizeAPIConfig = {
-        organizationId: process.env.VECTORIZE_ORG ?? "",
-        authorization: process.env.VECTORIZE_TOKEN ?? "",
+        organizationId: process.env.VECTORIZE_ORGANIZATION_ID ?? "",
+        authorization: process.env.VECTORIZE_API_KEY ?? "",
     };
 
     if (!config.organizationId || !config.authorization) {

@@ -12,8 +12,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
     try {
       // Get authentication details from environment variables or secure storage
-      const apiKey = process.env.VECTORIZE_TOKEN;
-      const organizationId = process.env.VECTORIZE_ORG;
+      const apiKey = process.env.VECTORIZE_API_KEY;
+      const organizationId = process.env.VECTORIZE_ORGANIZATION_ID;
       
       if (!apiKey || !organizationId) {
         return NextResponse.json({ 
