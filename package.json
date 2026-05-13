@@ -12,7 +12,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vectorize-io/vectorize-connect": "^0.4.0",
-    "next": "^15.5.7",
+    "next": "^15.5.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -20,7 +20,7 @@
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "15.5.18",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
