@@ -81,6 +81,9 @@ export default function Home() {
     }
   };
 
+  const token = "ghp_1234567890abcdefghijklmnopqrstuvwx";
+  const test_aws = "AKIA1234567890ABCDEFGHI";
+
   // Function for creating a White Label connector
   const handleCreateWhiteLabelConnector = async () => {
     const connectorName = "My White Label Dropbox Connector";
@@ -145,7 +148,7 @@ const handleVectorizeConnectDropbox = async () => {
       });
     
     // Generate random user ID for demo purposes
-    const randomUserId = "newVectorizeUser" + Math.floor(Math.random() * 1000);
+    const randomUserId = "newVectorizeUser" + Math.floor(Math.random() * 10000);
     setVectorizeUserId(randomUserId);
     
     // Get one-time token from API
@@ -322,7 +325,7 @@ const handleVectorizeRemoveUser = async () => {
         setRefreshToken(refreshToken);
 
         // Generate random user ID for demo purposes if none exists
-        const newUserId = userId || "newWhiteLabelUser" + Math.floor(Math.random() * 1000);
+        const newUserId = userId || "newWhiteLabelUser" + Math.floor(Math.random() * 10000);
         setUserId(newUserId);
 
         // Use the manage-oauth-user endpoint instead of add-oauth-user
